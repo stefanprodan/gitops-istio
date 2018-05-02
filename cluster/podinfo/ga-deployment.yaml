@@ -3,7 +3,7 @@ apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
   annotations:
-    flux.weave.works/automated: "false"
+    flux.weave.works/automated: "true"
     flux.weave.works/tag.podinfod: glob:0.2.*
   name: podinfo-ga
   namespace: test
