@@ -16,8 +16,8 @@ spec:
     - destination:
         name: podinfo.test
         subset: canary
-      weight: 60
+      weight: 0
     - destination:
         name: podinfo.test
         subset: ga
-      weight: 40
+      weight: 100
