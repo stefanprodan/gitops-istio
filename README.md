@@ -69,15 +69,15 @@ kubectl label namespace test istio-injection=enabled
 Apply the podinfo ga and canary deployments and service:
 
 ```bash
-kubectl -n test apply -f ./deploy/istio-v1alpha3/ga-dep.yaml,./deploy/istio-v1alpha3/canary-dep.yaml,./deploy/istio-v1alpha3/svc.yaml
+kubectl -n test apply -f ./cluster/podinfo/ga-deployment.yaml,./cluster/podinfo/canary-deployment.yaml,./cluster/podinfo/service.yaml
 ```
 
 Apply the istio destination rule, virtual service and gateway:
 
 ```bash
-kubectl -n test apply -f ./deploy/istio-v1alpha3/istio-destination-rule.yaml
-kubectl -n test apply -f ./deploy/istio-v1alpha3/istio-virtual-service.yaml
-kubectl -n test apply -f ./deploy/istio-v1alpha3/istio-gateway.yaml
+kubectl -n test apply -f ./cluster/podinfo/destination-rule.yaml
+kubectl -n test apply -f ./cluster/podinfo/virtual-service.yaml
+kubectl -n test apply -f ./cluster/podinfo/gateway.yaml
 ```
 
 Create a `loadtest` pod for testing:
