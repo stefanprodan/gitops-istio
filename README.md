@@ -83,10 +83,10 @@ kubectl -n test apply -f ./cluster/podinfo/gateway.yaml
 Create a `loadtest` pod for testing:
 
 ```bash
-kubectl -n test run -i --rm --tty loadtest --image=stefanprodan/loadtest --restart=Never -- sh
+kubectl -n test apply -f ./cluster/loadtest/pod.yaml
 ```
 
-Start the load test:
+Exec into `loadtest` pod and start the load test:
 
 ```bash
 hey -n 1000000 -c 2 -q 5 http://podinfo.test:9898/version
