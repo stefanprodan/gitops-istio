@@ -7,17 +7,17 @@ metadata:
 spec:
   hosts:
   - podinfo
-  - podinfo.co.uk
+  - podinfo.weavedx.com
   gateways:
   - mesh
   - podinfo-gateway
   http:
   - route:
     - destination:
-        name: podinfo.test
+        host: podinfo
         subset: canary
-      weight: 10
+      weight: 1
     - destination:
-        name: podinfo.test
+        host: podinfo
         subset: ga
-      weight: 90
+      weight: 99
