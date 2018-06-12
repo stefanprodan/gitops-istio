@@ -18,7 +18,7 @@ Install Weave Flux and its Helm Operator by specifying your fork URL
 ```bash
 helm install --name flux \
 --set helmOperator.create=true \
---set git.url=git@github.com:stefanprodan/openfaas-flux \
+--set git.url=git@github.com:stefanprodan/gitops-istio \
 --set git.chartsPath=charts \
 --namespace flux \
 weaveworks/flux
@@ -30,7 +30,7 @@ You can connect Weave Flux to Weave Cloud using a service token:
 helm install --name flux \
 --set token=YOUR_WEAVE_CLOUD_SERVICE_TOKEN \
 --set helmOperator.create=true \
---set git.url=git@github.com:stefanprodan/openfaas-flux \
+--set git.url=git@github.com:stefanprodan/gitops-istio \
 --set git.chartsPath=charts \
 --namespace flux \
 weaveworks/flux
