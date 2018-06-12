@@ -1,0 +1,48 @@
+apiVersion: helm.integrations.flux.weave.works/v1alpha2
+kind: FluxHelmRelease
+metadata:
+  name: istio
+  namespace: istio-system
+  labels:
+    chart: istio
+spec:
+  chartGitPath: istio
+  releaseName: istio
+  values:
+    tag: 0.8.0
+    rbacEnabled: true
+    mtls:
+      enabled: false
+    ingress:
+      enabled: true
+      autoscaleMin: 1
+      autoscaleMax: 1
+    ingressgateway:
+      enabled: true
+      autoscaleMin: 1
+      autoscaleMax: 1
+    egressgateway:
+      enabled: true
+      autoscaleMin: 1
+      autoscaleMax: 1
+    sidecarInjectorWebhook:
+      enabled: true
+    galley:
+      enabled: false
+    mixer:
+      enabled: true
+    pilot:
+      enabled: true
+    security:
+      enabled: true
+    # addons configuration
+    grafana:
+      enabled: false
+    prometheus:
+      enabled: true
+    servicegraph:
+      enabled: false
+    tracing:
+      enabled: false
+      jaeger:
+        enabled: false

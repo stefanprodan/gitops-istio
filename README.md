@@ -1,90 +1,93 @@
 # GitOps for Istio Canary Deployments
 
-### Install Istio
+This is a step by step guide on how to set up a GitOps workflow for Istio with Weave Flux. 
+GitOps is a way to do Continuous Delivery, it works by using Git as a source of truth for declarative infrastructure 
+and workloads. In practice this means using `git push` instead of `kubectl create/apply` or `helm install/upgrade`.
 
-Download latest release:
+### Install Weave Flux with Helm
+
+Add the Weave Flux chart repo:
 
 ```bash
-curl -L https://git.io/getLatestIstio | sh -
+helm repo add weaveworks https://weaveworks.github.io/flux
 ```
 
-Add the istioctl client to your PATH:
+Install Weave Flux and its Helm Operator by specifying your fork URL 
+(replace `stefanprodan` with your GitHub username): 
 
 ```bash
-cd istio-0.7.1
-export PATH=$PWD/bin:$PATH
+helm install --name flux \
+--set helmOperator.create=true \
+--set git.url=git@github.com:stefanprodan/openfaas-flux \
+--set git.chartsPath=charts \
+--namespace flux \
+weaveworks/flux
 ```
 
-Install Istio services without enabling mutual TLS authentication:
+You can connect Weave Flux to Weave Cloud using a service token:
 
 ```bash
-kubectl apply -f install/kubernetes/istio.yaml
-``` 
-
-### Set Istio automatic sidecar injection
-
-Generate certs:
-
-```bash
-./install/kubernetes/webhook-create-signed-cert.sh \
-    --service istio-sidecar-injector \
-    --namespace istio-system \
-    --secret sidecar-injector-certs
+helm install --name flux \
+--set token=YOUR_WEAVE_CLOUD_SERVICE_TOKEN \
+--set helmOperator.create=true \
+--set git.url=git@github.com:stefanprodan/openfaas-flux \
+--set git.chartsPath=charts \
+--namespace flux \
+weaveworks/flux
 ```
 
-Install the sidecar injection configmap:
+Note that Flux Helm Operator works with Kubernetes 1.9 or newer.
+
+### Setup Git sync
+
+At startup, Flux generates a SSH key and logs the public key. 
+Find the SSH public key with:
 
 ```bash
-kubectl apply -f install/kubernetes/istio-sidecar-injector-configmap-release.yaml
+kubectl -n flux logs deployment/flux | grep identity.pub 
 ```
 
-Set the caBundle in the webhook install YAML that the Kubernetes api-server uses to invoke the webhook:
+In order to sync your cluster state with git you need to copy the public key and 
+create a **deploy key** with **write access** on your GitHub repository.
 
-```bash
-cat install/kubernetes/istio-sidecar-injector.yaml | \
-     ./install/kubernetes/webhook-patch-ca-bundle.sh > \
-     install/kubernetes/istio-sidecar-injector-with-ca-bundle.yaml
+Open GitHub and fork this repo, navigate to your fork, go to _Settings > Deploy keys_ click on _Add deploy key_, check 
+_Allow write access_, paste the Flux public key and click _Add key_.
+
+### Install Istio with Weave Flux
+
+The Flux Helm operator provides an extension to Weave Flux that automates Helm Chart releases for it.
+A Chart release is described through a Kubernetes custom resource named `FluxHelmRelease`.
+The Flux daemon synchronizes these resources from git to the cluster,
+and the Flux Helm operator makes sure Helm charts are released as specified in the resources.
+
+Istio release definition:
+
+```yaml
+apiVersion: helm.integrations.flux.weave.works/v1alpha2
+kind: FluxHelmRelease
+metadata:
+  name: istio
+  namespace: istio-system
+  labels:
+    chart: istio
+spec:
+  chartGitPath: istio
+  releaseName: istio
+  values:
+    rbacEnabled: true
+    mtls:
+      enabled: false
+    ingress:
+      enabled: true
+    ingressgateway:
+      enabled: true
+    egressgateway:
+      enabled: true
+    sidecarInjectorWebhook:
+      enabled: true
 ```
 
-Install the sidecar injector webhook:
-
-```bash
-kubectl apply -f install/kubernetes/istio-sidecar-injector-with-ca-bundle.yaml
-```
-
-Create the `test` namespace:
-
-```bash
-kubectl create namespace test
-```
-
-Label the `test` namespace with `istio-injection=enabled`:
-
-```bash
-kubectl label namespace test istio-injection=enabled
-```
-
-### Run GA and Canary Deployments
-
-Apply the podinfo ga and canary deployments and service:
-
-```bash
-kubectl -n test apply -f ./cluster/podinfo/ga-deployment.yaml,./cluster/podinfo/canary-deployment.yaml,./cluster/podinfo/service.yaml
-```
-
-Apply the istio destination rule, virtual service and gateway:
-
-```bash
-kubectl -n test apply -f ./cluster/podinfo/destination-rule.yaml
-kubectl -n test apply -f ./cluster/podinfo/virtual-service.yaml
-kubectl -n test apply -f ./cluster/podinfo/gateway.yaml
-```
-
-Create a `loadtest` pod for testing:
-
-```bash
-kubectl -n test apply -f ./cluster/loadtest/pod.yaml
-```
+### Drive a canary deployment from git 
 
 Exec into `loadtest` pod and start the load test:
 
@@ -105,18 +108,18 @@ metadata:
 spec:
   hosts:
   - podinfo
-  - podinfo.co.uk
+  - podinfo.weavedx.com
   gateways:
   - mesh
   - podinfo-gateway
   http:
   - route:
+#    - destination:
+#        host: podinfo
+#        subset: canary
+#      weight: 0
     - destination:
-        name: podinfo.test
-        subset: canary
-      weight: 0
-    - destination:
-        name: podinfo.test
+        host: podinfo
         subset: ga
       weight: 100
 ```
@@ -131,11 +134,11 @@ Route 10% of the traffic to the canary deployment:
   http:
   - route:
     - destination:
-        name: podinfo.test
+        host: podinfo
         subset: canary
       weight: 10
     - destination:
-        name: podinfo.test
+        host: podinfo
         subset: ga
       weight: 90
 ```
@@ -150,11 +153,11 @@ Increase the canary traffic to 60%:
   http:
   - route:
     - destination:
-        name: podinfo.test
+        host: podinfo
         subset: canary
       weight: 60
     - destination:
-        name: podinfo.test
+        host: podinfo
         subset: ga
       weight: 40
 ```
@@ -167,13 +170,13 @@ Full promotion, 100% of the traffic to the canary:
   http:
   - route:
     - destination:
-        name: podinfo.test
+        host: podinfo
         subset: canary
       weight: 100
-    - destination:
-        name: podinfo.test
-        subset: ga
-      weight: 0
+#    - destination:
+#        host: podinfo
+#        subset: ga
+#      weight: 0
 ```
 
 ![s4](https://github.com/stefanprodan/k8s-podinfo/blob/master/docs/screens/istio-c-s4.png)
