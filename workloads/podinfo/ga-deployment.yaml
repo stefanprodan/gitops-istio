@@ -3,30 +3,30 @@ apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
   annotations:
-    flux.weave.works/automated: "true"
-    flux.weave.works/tag.podinfod: glob:0.3.*
-  name: podinfo-canary
+    flux.weave.works/automated: "false"
+    flux.weave.works/tag.podinfod: glob:0.2.*
+  name: podinfo-ga
   namespace: test
   labels:
     app: podinfo
-    release: canary
+    release: ga
 spec:
   replicas: 1
   selector:
     matchLabels:
      app: podinfo
-     release: canary
+     release: ga
   template:
     metadata:
       labels:
         app: podinfo
-        release: canary
+        release: ga
       annotations:
         prometheus.io/scrape: 'true'
     spec:
       containers:
       - name: podinfod
-        image: quay.io/stefanprodan/podinfo:0.3.0
+        image: quay.io/stefanprodan/podinfo:0.2.2
         imagePullPolicy: Always
         command:
           - ./podinfo

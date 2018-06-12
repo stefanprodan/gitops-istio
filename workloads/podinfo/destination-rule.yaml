@@ -5,7 +5,7 @@ metadata:
   name: podinfo
   namespace: test
 spec:
-  name: podinfo.test
+  host: podinfo
   subsets:
   - name: ga
     labels:

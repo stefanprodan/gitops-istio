@@ -6,14 +6,13 @@ metadata:
   namespace: test
 spec:
   selector:
-    app: podinfo
+    istio: ingressgateway # use Istio default gateway implementation
   servers:
   - port:
       number: 80
       name: http
       protocol: HTTP
     hosts:
-    - podinfo.co.uk
-    - podinfo.test.svc.cluster.local
+    - podinfo.weavedx.com
 
 

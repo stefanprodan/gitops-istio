@@ -1,3 +1,4 @@
+# while true; do sleep 1; curl -sS podinfo.weavedx.com | grep HOSTNAME ;done
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
@@ -7,17 +8,17 @@ metadata:
 spec:
   hosts:
   - podinfo
-  - podinfo.co.uk
+  - podinfo.weavedx.com
   gateways:
   - mesh
   - podinfo-gateway
   http:
   - route:
     - destination:
-        name: podinfo.test
+        host: podinfo
         subset: canary
       weight: 10
     - destination:
-        name: podinfo.test
+        host: podinfo
         subset: ga
       weight: 90
