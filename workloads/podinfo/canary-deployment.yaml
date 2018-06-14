@@ -3,8 +3,8 @@ apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
   annotations:
-    flux.weave.works/automated: "false"
-    flux.weave.works/tag.podinfod: glob:0.3.*
+    flux.weave.works/automated: "true"
+    flux.weave.works/tag.podinfod: glob:0.4.*
   name: podinfo-canary
   namespace: test
   labels:
@@ -26,7 +26,7 @@ spec:
     spec:
       containers:
       - name: podinfod
-        image: quay.io/stefanprodan/podinfo:0.3.0
+        image: quay.io/stefanprodan/podinfo:0.4.0
         imagePullPolicy: Always
         command:
           - ./podinfo
