@@ -18,6 +18,7 @@ prometheus:
 
 sidecarInjectorWebhook:
   enabled: true
+  enableNamespacesByDefault: false
 
 grafana:
   enabled: true
@@ -26,4 +27,7 @@ tracing:
   enabled: true
 
 servicegraph:
+  enabled: true
+
+galley:
   enabled: true
