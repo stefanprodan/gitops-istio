@@ -1,0 +1,1 @@
+{"jobID":"db2c7033-455d-f2b2-f6fd-49f8398ec629","spec":{"type":"policy","cause":{"Message":"","User":"stefan \u003cstefan@weave.works\u003e"},"spec":{"demo:fluxhelmrelease/frontend":{"add":{"automated":"true"},"remove":null}}},"result":null}
