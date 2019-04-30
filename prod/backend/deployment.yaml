@@ -24,8 +24,8 @@ spec:
         app: backend
     spec:
       containers:
-      - name: podinfod
-        image: quay.io/stefanprodan/podinfo:1.4.0
+      - name: backend
+        image: stefanprodan/podinfo:1.4.0
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 9898
