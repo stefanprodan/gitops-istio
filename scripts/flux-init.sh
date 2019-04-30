@@ -13,7 +13,7 @@ if [[ ! -x "$(command -v helm)" ]]; then
 fi
 
 REPO_ROOT=$(git rev-parse --show-toplevel)
-REPO_URL=git@github.com:stefanprodan/gitops-istio
+REPO_URL=${1:-git@github.com:stefanprodan/gitops-istio}
 REPO_BRANCH=1.1
 TEMP=${REPO_ROOT}/temp
 
