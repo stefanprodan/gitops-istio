@@ -14,7 +14,7 @@ fi
 
 REPO_ROOT=$(git rev-parse --show-toplevel)
 REPO_URL=${1:-git@github.com:stefanprodan/gitops-istio}
-REPO_BRANCH=1.1
+REPO_BRANCH=master
 TEMP=${REPO_ROOT}/temp
 
 rm -rf ${TEMP} && mkdir ${TEMP}
@@ -57,6 +57,7 @@ EOF
 
 helm repo add weaveworks https://weaveworks.github.io/flux
 
+echo ">>> Installing Flux for ${REPO_URL}"
 helm upgrade -i flux --wait \
 --set git.url=${REPO_URL} \
 --set git.branch=${REPO_BRANCH} \
