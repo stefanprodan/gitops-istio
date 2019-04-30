@@ -38,8 +38,8 @@ spec:
         - --random-delay=false
         - --random-error=false
         env:
-        - name: PODINFO_UI_COLOR
-          value: blue
+        - name: PODINFO_BACKEND_URL
+          value: http://backend.prod:9898
         livenessProbe:
           exec:
             command:
