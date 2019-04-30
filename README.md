@@ -104,6 +104,9 @@ spec:
 Note that the Istio CRDs are extracted from the istio-init chart and placed inside the istio-system dir. You can update
 the CRDs by running the `./scripts/istio-init.sh` script.
 
+If you make changes to the Istio configuration and push those to git, Flux will upgrade the Helm release. 
+It can take up to 3 minutes for Flux to sync and apply the changes or you can use `fluxctl sync` to trigger a git sync.
+
 ### Workloads bootstrap
 
 When Flux syncs the Git repository with your cluster, it creates the frontend deployment, HPA and a canary object.
