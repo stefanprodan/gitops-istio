@@ -26,8 +26,9 @@ spec:
           cpu: 10m
           memory: 128Mi
 
+    # ingress configuration
     gateways:
-      enabled: false
+      enabled: true
       istio-ingressgateway:
         type: LoadBalancer
         autoscaleEnabled: false
@@ -65,10 +66,10 @@ spec:
     tracing:
       enabled: false
 
-    # Common settings.
+    # common settings
     global:
+      # sidecar settings
       proxy:
-        # Resources for the sidecar.
         resources:
           requests:
             cpu: 10m
