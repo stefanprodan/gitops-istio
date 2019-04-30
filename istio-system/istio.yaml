@@ -19,6 +19,7 @@ spec:
     # pilot configuration
     pilot:
       enabled: true
+      autoscaleEnabled: false
       sidecar: true
       resources:
         requests:
@@ -28,6 +29,8 @@ spec:
     gateways:
       enabled: false
       istio-ingressgateway:
+        type: LoadBalancer
+        autoscaleEnabled: false
         autoscaleMax: 1
 
     # sidecar-injector webhook configuration
@@ -71,6 +74,6 @@ spec:
             cpu: 10m
             memory: 64Mi
           limits:
-            cpu: 1000m
+            cpu: 2000m
             memory: 256Mi
       useMCP: false

@@ -16,8 +16,8 @@ REPO_ROOT=$(git rev-parse --show-toplevel)
 
 helm delete --purge istio
 
-kubectl delete -f ${REPO_ROOT}/crd-10.yaml
-kubectl delete -f ${REPO_ROOT}/crd-11.yaml
+kubectl delete -f ${REPO_ROOT}/istio-system/crd-10.yaml
+kubectl delete -f ${REPO_ROOT}/istio-system/crd-11.yaml
 
 kubectl delete ns istio-system
 
