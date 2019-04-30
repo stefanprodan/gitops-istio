@@ -21,4 +21,6 @@ kubectl delete -f ${REPO_ROOT}/istio-system/crd-11.yaml
 
 kubectl delete ns istio-system
 
+kubectl delete ns prod
+
 
