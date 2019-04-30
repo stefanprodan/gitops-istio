@@ -49,7 +49,8 @@ check Allow write access, paste the Flux public key and click Add key.
 
 After Flux gets access to your repository it will do the following:
 
-* creates the Istio CRDs 
+* creates the `istio-system` and `prod` namespaces
+* creates the Istio CRDs
 * installs Istio Helm Release
 * installs Flagger Helm Release
 * installs Flagger's Grafana Helm Release
@@ -57,6 +58,48 @@ After Flux gets access to your repository it will do the following:
 * creates the frontend deployment and canary
 * creates the backend deployment and canary
 * creates the Istio public gateway 
+
+![gitops](https://github.com/stefanprodan/openfaas-flux/blob/master/docs/screens/flux-helm-gitops.png)
+
+The Flux Helm operator provides an extension to Weave Flux that automates Helm Chart releases for it. 
+A Chart release is described through a Kubernetes custom resource named HelmRelease. 
+The Flux daemon synchronizes these resources from git to the cluster, and the Flux Helm operator makes sure 
+Helm charts are released as specified in the resources.
+
+Istio Helm Release example:
+
+```yaml
+apiVersion: flux.weave.works/v1beta1
+kind: HelmRelease
+metadata:
+  name: istio
+  namespace: istio-system
+spec:
+  releaseName: istio
+  chart:
+    repository: https://storage.googleapis.com/istio-release/releases/1.1.4/charts
+    name: istio
+    version: 1.1.4
+  values:
+    pilot:
+      enabled: true
+    gateways:
+      enabled: true
+    sidecarInjectorWebhook:
+      enabled: true
+    galley:
+      enabled: false
+    mixer:
+      policy:
+        enabled: false
+      telemetry:
+        enabled: true
+    prometheus:
+      enabled: true
+      scrapeInterval: 5s
+    tracing:
+      enabled: false
+```
 
 
 
