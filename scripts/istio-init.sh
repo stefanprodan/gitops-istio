@@ -1,6 +1,16 @@
 #!/usr/bin/env bash
 
-set -o errexit
+set -e
+
+if [[ ! -x "$(command -v kubectl)" ]]; then
+    echo "kubectl not found"
+    exit 1
+fi
+
+if [[ ! -x "$(command -v helm)" ]]; then
+    echo "helm not found"
+    exit 1
+fi
 
 ISTIO_VER="1.1.4"
 REPO_ROOT=$(git rev-parse --show-toplevel)
