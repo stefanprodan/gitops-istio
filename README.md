@@ -33,7 +33,7 @@ git clone https://github.com/<YOUR-USERNAME>/gitops-istio
 cd gitops-istio
 ```
 
-### Cluster bootstrap with Flux
+### Cluster bootstrap
 
 Install Weave Flux and its Helm Operator by specifying your fork URL:
 
@@ -100,6 +100,9 @@ spec:
     tracing:
       enabled: false
 ```
+
+Note that the Istio CRDs are extracted from the istio-init chart and placed inside the istio-system dir. You can update
+the CRDs by running the `./scripts/istio-init.sh` script.
 
 ### Workloads bootstrap
 
