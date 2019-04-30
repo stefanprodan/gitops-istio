@@ -20,6 +20,13 @@ spec:
   service:
     # container port
     port: 9898
+    # HTTP match conditions (optional)
+    match:
+      - uri:
+          prefix: /
+    # HTTP rewrite (optional)
+    rewrite:
+      uri: /
     # Envoy timeout and retry policy (optional)
     headers:
       request:
