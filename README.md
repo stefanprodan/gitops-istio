@@ -205,14 +205,17 @@ Besides weighted routing, Flagger can be configured to route traffic to the cana
 In an A/B testing scenario, you'll be using HTTP headers or cookies to target a certain segment of your users. 
 This is particularly useful for frontend applications that require session affinity.
 
-Trigger a canary deployment by updating the frontend container image:
+For workloads that are not receiving constant traffic Flagger can be configured with a webhook, 
+that when called, will start a load test for the target workload.
+
+![Flagger Load Testing Webhook](https://raw.githubusercontent.com/weaveworks/flagger/master/docs/diagrams/flagger-load-testing.png)
+
+Trigger a deployment by updating the frontend container image:
 
 ```bash
 $ fluxctl release --workload=prod:deployment/frontend \
 --update-image=quay.io/stefanprodan/podinfo:1.4.1
 ```
-
-![A/B Testing](https://raw.githubusercontent.com/weaveworks/flagger/master/docs/diagrams/flagger-abtest-steps.png)
 
 Flagger detects that the deployment revision changed and starts the A/B testing:
 
