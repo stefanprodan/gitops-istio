@@ -12,9 +12,7 @@ For testing purposes you can use Minikube with two CPUs and 4GB of memory.
 Install Flux CLI, Helm and Tiller:
 
 ```bash
-brew install fluxctl
-
-brew install kubernetes-helm
+brew install fluxctl kubernetes-helm
 
 kubectl -n kube-system create sa tiller
 
@@ -22,7 +20,7 @@ kubectl create clusterrolebinding tiller-cluster-rule \
 --clusterrole=cluster-admin \
 --serviceaccount=kube-system:tiller
 
-helm init --service-account --wait tiller
+helm init --service-account tiller --wait
 ```
 
 Fork this repository and clone it:
@@ -84,6 +82,8 @@ spec:
       enabled: true
     gateways:
       enabled: true
+      istio-ingressgateway:
+        type: LoadBalancer
     sidecarInjectorWebhook:
       enabled: true
     mixer:
@@ -210,6 +210,29 @@ Note that if new changes are applied to the deployment during the canary analysi
 Besides weighted routing, Flagger can be configured to route traffic to the canary based on HTTP match conditions. 
 In an A/B testing scenario, you'll be using HTTP headers or cookies to target a certain segment of your users. 
 This is particularly useful for frontend applications that require session affinity.
+
+You can enable A/B testing by specifying the HTTP match conditions and the number of iterations:
+
+```yaml
+  canaryAnalysis:
+    # schedule interval (default 60s)
+    interval: 10s
+    # max number of failed metric checks before rollback
+    threshold: 10
+    # total number of iterations
+    iterations: 12
+    # canary match condition
+    match:
+      - headers:
+          user-agent:
+            regex: "^(?!.*Chrome)(?=.*\bSafari\b).*$"
+      - headers:
+          cookie:
+            regex: "^(.*?;)?(type=insider)(;.*)?$"
+```
+
+The above configuration will run an analysis for two minutes targeting Safari users and those that 
+have an insider cookie. The frontend configuration can be found at `prod/frontend/canary.yaml`.
 
 Trigger a deployment by updating the frontend container image:
 
