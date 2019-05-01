@@ -148,6 +148,12 @@ A canary deployment is triggered by changes in any of the following objects:
 * ConfigMaps mounted as volumes or mapped to environment variables
 * Secrets mounted as volumes or mapped to environment variables
 
+For workloads that are not receiving constant traffic Flagger can be configured with a webhook, 
+that when called, will start a load test for the target workload. The backend load test webhook configuration can be found
+at `prod/backend/canary.yaml`.
+
+![Flagger Load Testing Webhook](https://raw.githubusercontent.com/weaveworks/flagger/master/docs/diagrams/flagger-load-testing.png)
+
 Trigger a canary deployment for the backend app by updating the container image:
 
 ```bash
@@ -204,11 +210,6 @@ Note that if new changes are applied to the deployment during the canary analysi
 Besides weighted routing, Flagger can be configured to route traffic to the canary based on HTTP match conditions. 
 In an A/B testing scenario, you'll be using HTTP headers or cookies to target a certain segment of your users. 
 This is particularly useful for frontend applications that require session affinity.
-
-For workloads that are not receiving constant traffic Flagger can be configured with a webhook, 
-that when called, will start a load test for the target workload.
-
-![Flagger Load Testing Webhook](https://raw.githubusercontent.com/weaveworks/flagger/master/docs/diagrams/flagger-load-testing.png)
 
 Trigger a deployment by updating the frontend container image:
 
