@@ -1,7 +1,21 @@
 # gitops-istio
 
 This guide walks you through setting up Istio on a Kubernetes cluster and 
-automating canary deployments with Weave Flux and Flagger.
+automating canary deployments with GitOps pipelines.
+
+Components:
+
+* **Istio** service mesh
+    * manages the traffic flows between microservices, enforcing access policies and aggregating telemetry data
+* **Prometheus** monitoring system  
+    * time series database that collects and stores the service mesh metrics
+* **Flux** GitOps operator
+    * syncs YAMLs and Helm charts between git and clusters
+    * scans container registries and deploys new images
+* **Helm Operator** CRD controller
+    * automates Helm chart releases
+* **Flagger** progressive delivery operator
+    * automates the promotion of canary deployments using Istio routing for traffic shifting and Prometheus metrics for canary analysis
 
 ### Prerequisites
 
