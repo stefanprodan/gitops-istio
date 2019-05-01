@@ -5,7 +5,6 @@ automating canary deployments with GitOps pipelines.
 
 ![Progressive Delivery GitOps Pipeline](https://raw.githubusercontent.com/weaveworks/flagger/master/docs/diagrams/flagger-gitops-istio.png)
 
-
 Components:
 
 * **Istio** service mesh
@@ -193,20 +192,20 @@ $ kubectl -n prod describe canary backend
 
 Events:
 
-New revision detected! Scaling up backend.test
-Starting canary analysis for backend.test
-Advance backend.test canary weight 5
-Advance backend.test canary weight 10
-Advance backend.test canary weight 15
-Advance backend.test canary weight 20
-Advance backend.test canary weight 25
-Advance backend.test canary weight 30
-Advance backend.test canary weight 35
-Advance backend.test canary weight 40
-Advance backend.test canary weight 45
-Advance backend.test canary weight 50
-Copying backend.test template spec to backend-primary.test
-Promotion completed! Scaling down backend.test
+New revision detected! Scaling up backend.prod
+Starting canary analysis for backend.prod
+Advance backend.prod canary weight 5
+Advance backend.prod canary weight 10
+Advance backend.prod canary weight 15
+Advance backend.prod canary weight 20
+Advance backend.prod canary weight 25
+Advance backend.prod canary weight 30
+Advance backend.prod canary weight 35
+Advance backend.prod canary weight 40
+Advance backend.prod canary weight 45
+Advance backend.prod canary weight 50
+Copying backend.prod template spec to backend-primary.prod
+Promotion completed! Scaling down backend.prod
 ```
 
 During the analysis the canary’s progress can be monitored with Grafana. You can access Grafana using port forwarding:
@@ -263,8 +262,7 @@ Flagger detects that the deployment revision changed and starts the A/B testing:
 ```bash
 $ kubectl -n istio-system logs deploy/flagger -f | jq .msg
 
-New revision detected frontend.prod
-Scaling up frontend.prod
+New revision detected! Scaling up frontend.prod
 Waiting for frontend.prod rollout to finish: 0 of 1 updated replicas are available
 Advance frontend.prod canary iteration 1/10
 Advance frontend.prod canary iteration 2/10
