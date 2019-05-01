@@ -172,7 +172,7 @@ Commit applied:	ccb4ae7
 Flagger detects that the deployment revision changed and starts a new rollout:
 
 ```bash
-kubectl -n test describe canary backend
+$ kubectl -n test describe canary backend
 
 Events:
 
@@ -243,37 +243,31 @@ $ fluxctl release --workload=prod:deployment/frontend \
 
 Flagger detects that the deployment revision changed and starts the A/B testing:
 
-```text
-kubectl -n test describe canary/frontend
+```bash
+$ kubectl -n istio-system logs deploy/flagger -f | jq .msg
 
-Status:
-  Failed Checks:         0
-  Phase:                 Succeeded
-Events:
-  Type     Reason  Age   From     Message
-  ----     ------  ----  ----     -------
-  Normal   Synced  3m    flagger  New revision detected frontend.prod
-  Normal   Synced  3m    flagger  Scaling up frontend.prod
-  Warning  Synced  3m    flagger  Waiting for frontend.prod rollout to finish: 0 of 1 updated replicas are available
-  Normal   Synced  3m    flagger  Advance frontend.prod canary iteration 1/10
-  Normal   Synced  3m    flagger  Advance frontend.prod canary iteration 2/10
-  Normal   Synced  3m    flagger  Advance frontend.prod canary iteration 3/10
-  Normal   Synced  2m    flagger  Advance frontend.prod canary iteration 4/10
-  Normal   Synced  2m    flagger  Advance frontend.prod canary iteration 5/10
-  Normal   Synced  1m    flagger  Advance frontend.prod canary iteration 6/10
-  Normal   Synced  1m    flagger  Advance frontend.prod canary iteration 7/10
-  Normal   Synced  55s   flagger  Advance frontend.prod canary iteration 8/10
-  Normal   Synced  45s   flagger  Advance frontend.prod canary iteration 9/10
-  Normal   Synced  35s   flagger  Advance frontend.prod canary iteration 10/10
-  Normal   Synced  25s   flagger  Copying frontend.prod template spec to frontend-primary.prod
-  Warning  Synced  15s   flagger  Waiting for frontend-primary.prod rollout to finish: 1 of 2 updated replicas are available
-  Normal   Synced  5s    flagger  Promotion completed! Scaling down frontend.prod
+New revision detected frontend.prod
+Scaling up frontend.prod
+Waiting for frontend.prod rollout to finish: 0 of 1 updated replicas are available
+Advance frontend.prod canary iteration 1/10
+Advance frontend.prod canary iteration 2/10
+Advance frontend.prod canary iteration 3/10
+Advance frontend.prod canary iteration 4/10
+Advance frontend.prod canary iteration 5/10
+Advance frontend.prod canary iteration 6/10
+Advance frontend.prod canary iteration 7/10
+Advance frontend.prod canary iteration 8/10
+Advance frontend.prod canary iteration 9/10
+Advance frontend.prod canary iteration 10/10
+Copying frontend.prod template spec to frontend-primary.prod
+Waiting for frontend-primary.prod rollout to finish: 1 of 2 updated replicas are available
+Promotion completed! Scaling down frontend.prod
 ```
 
 You can monitor all canaries with:
 
 ```bash
-watch kubectl get canaries --all-namespaces
+$ watch kubectl get canaries --all-namespaces
 
 NAMESPACE   NAME      STATUS        WEIGHT   LASTTRANSITIONTIME
 prod        frontend  Progressing   100      2019-04-30T18:15:07Z
