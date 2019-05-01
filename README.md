@@ -3,6 +3,9 @@
 This guide walks you through setting up Istio on a Kubernetes cluster and 
 automating canary deployments with GitOps pipelines.
 
+![Progressive Delivery GitOps Pipeline](https://raw.githubusercontent.com/weaveworks/flagger/master/docs/diagrams/flagger-gitops-istio.png)
+
+
 Components:
 
 * **Istio** service mesh
