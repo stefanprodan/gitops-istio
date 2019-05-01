@@ -189,7 +189,7 @@ Commit applied:	ccb4ae7
 Flagger detects that the deployment revision changed and starts a new rollout:
 
 ```bash
-$ kubectl -n test describe canary backend
+$ kubectl -n prod describe canary backend
 
 Events:
 
@@ -311,7 +311,7 @@ When the number of failed checks reaches the canary analysis threshold, the traf
 the canary is scaled to zero and the rollout is marked as failed.
 
 ```text
-kubectl -n test describe canary/abtest
+kubectl -n prod describe canary/frontend
 
 Status:
   Failed Checks:         2
