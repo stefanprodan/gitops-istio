@@ -16,5 +16,5 @@ spec:
     metricsServer: http://prometheus.istio-system:9090
     image:
       repository: weaveworks/flagger
-      tag: 0.12.0
+      tag: fix-vs-c92230c
       pullPolicy: IfNotPresent
