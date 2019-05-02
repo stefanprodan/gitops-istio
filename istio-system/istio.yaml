@@ -40,7 +40,7 @@ spec:
 
     # galley configuration
     galley:
-      enabled: false
+      enabled: true
 
     # mixer configuration
     mixer:
@@ -64,7 +64,7 @@ spec:
 
     # addon jaeger tracing configuration
     tracing:
-      enabled: false
+      enabled: true
 
     # common settings
     global:
