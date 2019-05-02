@@ -12,10 +12,6 @@ spec:
     name: istio
     version: 1.1.4
   values:
-    #
-    # Minimal Istio Configuration required by Flagger
-    #
-
     # pilot configuration
     pilot:
       enabled: true
@@ -37,6 +33,10 @@ spec:
     # sidecar-injector webhook configuration
     sidecarInjectorWebhook:
       enabled: true
+
+    # security configuration
+    security:
+      enabled: false
 
     # galley configuration
     galley:
