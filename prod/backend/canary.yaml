@@ -20,20 +20,6 @@ spec:
   service:
     # container port
     port: 9898
-    # HTTP match conditions (optional)
-    match:
-      - uri:
-          prefix: /
-    # HTTP rewrite (optional)
-    rewrite:
-      uri: /
-    # Envoy timeout and retry policy (optional)
-    headers:
-      request:
-        add:
-          x-envoy-upstream-rq-timeout-ms: "15000"
-          x-envoy-max-retries: "10"
-          x-envoy-retry-on: "gateway-error,connect-failure,refused-stream"
   # promote the canary without analysing it (default false)
   skipAnalysis: false
   canaryAnalysis:

@@ -45,7 +45,7 @@ spec:
     # mixer configuration
     mixer:
       policy:
-        enabled: false
+        enabled: true
         replicaCount: 1
         autoscaleEnabled: false
       telemetry:
@@ -77,4 +77,6 @@ spec:
           limits:
             cpu: 2000m
             memory: 256Mi
-      useMCP: false
+      controlPlaneSecurityEnabled: false
+      mtls:
+        enabled: false
