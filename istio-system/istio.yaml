@@ -50,7 +50,7 @@ spec:
         autoscaleEnabled: false
       telemetry:
         enabled: true
-        replicaCount: 2
+        replicaCount: 1
         autoscaleEnabled: false
       resources:
         requests:
@@ -64,7 +64,7 @@ spec:
 
     # addon jaeger tracing configuration
     tracing:
-      enabled: false
+      enabled: true
 
     # common settings
     global:
