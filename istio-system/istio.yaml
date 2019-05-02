@@ -36,7 +36,7 @@ spec:
 
     # security configuration
     security:
-      enabled: false
+      enabled: true
 
     # galley configuration
     galley:
