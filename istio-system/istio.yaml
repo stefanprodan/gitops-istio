@@ -15,7 +15,7 @@ spec:
     # pilot configuration
     pilot:
       enabled: true
-      autoscaleEnabled: false
+      autoscaleEnabled: true
       sidecar: true
       resources:
         requests:
@@ -40,12 +40,12 @@ spec:
 
     # galley configuration
     galley:
-      enabled: true
+      enabled: false
 
     # mixer configuration
     mixer:
       policy:
-        enabled: true
+        enabled: false
         replicaCount: 1
         autoscaleEnabled: false
       telemetry:
@@ -80,3 +80,4 @@ spec:
       controlPlaneSecurityEnabled: false
       mtls:
         enabled: false
+      useMCP: false
