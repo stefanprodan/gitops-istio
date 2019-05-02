@@ -40,7 +40,7 @@ spec:
 
     # galley configuration
     galley:
-      enabled: false
+      enabled: true
 
     # mixer configuration
     mixer:
