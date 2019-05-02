@@ -39,7 +39,7 @@ spec:
         - --random-error=false
         env:
         - name: PODINFO_BACKEND_URL
-          value: http://backend.prod.svc.cluster.local:9898
+          value: http://backend:9898/echo
         livenessProbe:
           exec:
             command:
