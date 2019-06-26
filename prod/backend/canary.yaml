@@ -20,6 +20,10 @@ spec:
   service:
     # container port
     port: 9898
+    trafficPolicy:
+      tls:
+        # use ISTIO_MUTUAL when mTLS is enabled
+        mode: DISABLE
   # promote the canary without analysing it (default false)
   skipAnalysis: false
   canaryAnalysis:
