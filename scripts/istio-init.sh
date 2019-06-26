@@ -12,13 +12,13 @@ if [[ ! -x "$(command -v helm)" ]]; then
     exit 1
 fi
 
-ISTIO_VER="1.1.4"
+ISTIO_VER="1.2.0"
 REPO_ROOT=$(git rev-parse --show-toplevel)
 TEMP=${REPO_ROOT}/temp
 ISTIO_SYSTEM=${REPO_ROOT}/istio-system
 
-mkdir ${ISTIO_SYSTEM}
-mkdir ${TEMP}
+mkdir -p ${ISTIO_SYSTEM}
+mkdir -p ${TEMP}
 
 helm repo add istio.io https://storage.googleapis.com/istio-release/releases/${ISTIO_VER}/charts
 
