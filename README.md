@@ -1,7 +1,7 @@
 # gitops-istio
 
 This guide walks you through setting up Istio on a Kubernetes cluster and 
-automating canary deployments with GitOps pipelines.
+automating A/B testing and canary deployments with GitOps pipelines.
 
 ![Progressive Delivery GitOps Pipeline](https://raw.githubusercontent.com/weaveworks/flagger/master/docs/diagrams/flagger-gitops-istio.png)
 
@@ -378,7 +378,7 @@ Besides Slack, you can use Alertmanager to trigger alerts when a canary deployme
 If you have any questions about progressive delivery:
 
 * Invite yourself to the [Weave community slack](https://slack.weave.works/)
-  and join the [#flagger](https://weave-community.slack.com/messages/flagger/) channel.
+  and join the [#flux](https://weave-community.slack.com/messages/flux/) and [#flagger](https://weave-community.slack.com/messages/flagger/) channel.
 * Join the [Weave User Group](https://www.meetup.com/pro/Weave/) and get invited to online talks,
   hands-on training and meetups in your area.
 
