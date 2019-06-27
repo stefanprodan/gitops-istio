@@ -90,21 +90,15 @@ metadata:
 spec:
   releaseName: istio
   chart:
-    repository: https://storage.googleapis.com/istio-release/releases/1.1.4/charts
+    repository: https://storage.googleapis.com/istio-release/releases/1.2.0/charts
     name: istio
-    version: 1.1.4
+    version: 1.2.0
   values:
-    pilot:
-      enabled: true
     gateways:
       enabled: true
       istio-ingressgateway:
         type: LoadBalancer
-    sidecarInjectorWebhook:
-      enabled: true
     mixer:
-      policy:
-        enabled: false
       telemetry:
         enabled: true
     prometheus:
@@ -122,7 +116,7 @@ It can take up to 3 minutes for Flux to sync and apply the changes or you can us
 
 When Flux syncs the Git repository with your cluster, it creates the frontend/backend deployment, HPA and a canary object.
 Flagger uses the canary definition to create a series of objects: Kubernetes deployments, 
-ClusterIP services and Istio virtual services. These objects expose the application on the mesh and drive 
+ClusterIP services, Istio destination rules and virtual services. These objects expose the application on the mesh and drive 
 the canary analysis and promotion.
 
 ```bash
@@ -137,6 +131,8 @@ horizontalpodautoscaler.autoscaling/frontend-primary
 service/frontend
 service/frontend-canary
 service/frontend-primary
+destinationrule.networking.istio.io/frontend-canary
+destinationrule.networking.istio.io/frontend-primary
 virtualservice.networking.istio.io/frontend
 ```
 
@@ -346,7 +342,7 @@ spec:
   chart:
     repository: https://flagger.app
     name: flagger
-    version: 0.12.0
+    version: 0.16.0
   values:
     slack:
       user: flagger
