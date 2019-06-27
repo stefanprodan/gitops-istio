@@ -373,3 +373,13 @@ Besides Slack, you can use Alertmanager to trigger alerts when a canary deployme
       description: "Workload {{ $labels.name }} namespace {{ $labels.namespace }}"
 ```
 
+### Getting Help
+
+If you have any questions about progressive delivery:
+
+* Invite yourself to the [Weave community slack](https://slack.weave.works/)
+  and join the [#flagger](https://weave-community.slack.com/messages/flagger/) channel.
+* Join the [Weave User Group](https://www.meetup.com/pro/Weave/) and get invited to online talks,
+  hands-on training and meetups in your area.
+
+Your feedback is always welcome!
