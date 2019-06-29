@@ -90,9 +90,9 @@ metadata:
 spec:
   releaseName: istio
   chart:
-    repository: https://storage.googleapis.com/istio-release/releases/1.2.0/charts
+    repository: https://storage.googleapis.com/istio-release/releases/1.2.2/charts
     name: istio
-    version: 1.2.0
+    version: 1.2.2
   values:
     gateways:
       enabled: true
