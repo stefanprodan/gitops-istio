@@ -12,7 +12,7 @@ if [[ ! -x "$(command -v helm)" ]]; then
     exit 1
 fi
 
-ISTIO_VER="1.2.0"
+ISTIO_VER="1.2.2"
 REPO_ROOT=$(git rev-parse --show-toplevel)
 TEMP=${REPO_ROOT}/temp
 ISTIO_SYSTEM=${REPO_ROOT}/istio-system

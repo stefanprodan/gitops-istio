@@ -43,7 +43,7 @@ helmOperator:
         keyFile: ""
         name: istio.io
         password: ""
-        url: https://storage.googleapis.com/istio-release/releases/1.2.0/charts
+        url: https://storage.googleapis.com/istio-release/releases/1.2.2/charts
         username: ""
       - caFile: ""
         cache: flagger-index.yaml
