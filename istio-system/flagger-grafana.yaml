@@ -11,10 +11,10 @@ spec:
   chart:
     repository: https://flagger.app
     name: grafana
-    version: 6.2.5
+    version: 1.2.0
   values:
     url: http://prometheus.istio-system:9090
     image:
       repository: grafana/grafana
-      tag: 5.4.3
+      tag: 6.2.5
       pullPolicy: IfNotPresent
