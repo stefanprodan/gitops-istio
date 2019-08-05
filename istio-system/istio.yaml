@@ -8,9 +8,9 @@ metadata:
 spec:
   releaseName: istio
   chart:
-    repository: https://storage.googleapis.com/istio-release/releases/1.2.2/charts
+    repository: https://storage.googleapis.com/istio-release/releases/1.2.3/charts
     name: istio
-    version: 1.2.2
+    version: 1.2.3
   values:
     # pilot configuration
     pilot:
