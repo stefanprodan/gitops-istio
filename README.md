@@ -23,7 +23,7 @@ Components:
 
 You'll need a Kubernetes cluster **v1.11** or newer with `LoadBalancer` support, 
 `MutatingAdmissionWebhook` and `ValidatingAdmissionWebhook` admission controllers enabled. 
-For testing purposes you can use Minikube with two CPUs and 4GB of memory. 
+For testing purposes you can use Minikube with four CPUs and 4GB of memory. 
 
 Install Flux CLI, Helm and Tiller:
 
