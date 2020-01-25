@@ -1,4 +1,4 @@
-apiVersion: flux.weave.works/v1beta1
+apiVersion: helm.fluxcd.io/v1
 kind: HelmRelease
 metadata:
   name: istio
@@ -8,9 +8,9 @@ metadata:
 spec:
   releaseName: istio
   chart:
-    repository: https://storage.googleapis.com/istio-release/releases/1.3.0/charts
+    repository: https://storage.googleapis.com/istio-release/releases/1.4.3/charts
     name: istio
-    version: 1.3.0
+    version: 1.4.3
   values:
     # pilot configuration
     pilot:

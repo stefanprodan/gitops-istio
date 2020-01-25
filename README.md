@@ -25,18 +25,10 @@ You'll need a Kubernetes cluster **v1.11** or newer with `LoadBalancer` support,
 `MutatingAdmissionWebhook` and `ValidatingAdmissionWebhook` admission controllers enabled. 
 For testing purposes you can use Minikube with four CPUs and 4GB of memory. 
 
-Install Flux CLI, Helm and Tiller:
+Install Flux CLI and Helm v3:
 
 ```bash
-brew install fluxctl kubernetes-helm
-
-kubectl -n kube-system create sa tiller
-
-kubectl create clusterrolebinding tiller-cluster-rule \
---clusterrole=cluster-admin \
---serviceaccount=kube-system:tiller
-
-helm init --service-account tiller --wait
+brew install fluxctl helm
 ```
 
 Fork this repository and clone it:
@@ -72,7 +64,7 @@ When Flux has write access to your repository it will do the following:
 * creates the backend deployment and canary
 * creates the Istio public gateway 
 
-![Helm Operator](https://raw.githubusercontent.com/stefanprodan/openfaas-flux/master/docs/screens/flux-helm.png)
+![Helm Operator](https://raw.githubusercontent.com/fluxcd/helm-operator/master/docs/_files/fluxcd-helm-operator-diagram.png)
 
 The Flux Helm operator provides an extension to Weave Flux that automates Helm Chart releases for it. 
 A Chart release is described through a Kubernetes custom resource named HelmRelease. 
@@ -82,7 +74,7 @@ Helm charts are released as specified in the resources.
 Istio Helm Release example:
 
 ```yaml
-apiVersion: flux.weave.works/v1beta1
+apiVersion: helm.fluxcd.io/v1
 kind: HelmRelease
 metadata:
   name: istio
@@ -90,9 +82,9 @@ metadata:
 spec:
   releaseName: istio
   chart:
-    repository: https://storage.googleapis.com/istio-release/releases/1.2.2/charts
+    repository: https://storage.googleapis.com/istio-release/releases/1.4.3/charts
     name: istio
-    version: 1.2.2
+    version: 1.4.3
   values:
     gateways:
       enabled: true
@@ -172,11 +164,11 @@ Trigger a canary deployment for the backend app by updating the container image:
 $ export FLUX_FORWARD_NAMESPACE=flux
 
 $ fluxctl release --workload=prod:deployment/backend \
---update-image=quay.io/stefanprodan/podinfo:1.4.1
+--update-image=stefanprodan/podinfo:3.1.1
 
 Submitting release ...
 WORKLOAD                 STATUS   UPDATES
-prod:deployment/backend  success  backend: quay.io/stefanprodan/podinfo:1.4.0 -> 1.4.1
+prod:deployment/backend  success  backend: quay.io/stefanprodan/podinfo:3.1.0 -> 3.1.1
 Commit pushed:	ccb4ae7
 Commit applied:	ccb4ae7
 ```
@@ -250,7 +242,7 @@ Trigger a deployment by updating the frontend container image:
 
 ```bash
 $ fluxctl release --workload=prod:deployment/frontend \
---update-image=quay.io/stefanprodan/podinfo:1.4.1
+--update-image=quay.io/stefanprodan/podinfo:3.1.1
 ```
 
 Flagger detects that the deployment revision changed and starts the A/B testing:
@@ -280,9 +272,9 @@ You can monitor all canaries with:
 ```bash
 $ watch kubectl get canaries --all-namespaces
 
-NAMESPACE   NAME      STATUS        WEIGHT   LASTTRANSITIONTIME
-prod        frontend  Progressing   100      2019-04-30T18:15:07Z
-prod        backend   Succeeded     0        2019-04-30T17:05:07Z
+NAMESPACE   NAME      STATUS        WEIGHT
+prod        frontend  Progressing   100
+prod        backend   Succeeded     0
 ```
 
 ### Automated rollback
@@ -329,20 +321,17 @@ Flagger can be configured to send Slack notifications.
 You can enable alerting by adding the Slack settings to Flagger's Helm Release:
 
 ```yaml
-apiVersion: flux.weave.works/v1beta1
+apiVersion: helm.fluxcd.io/v1
 kind: HelmRelease
 metadata:
   name: flagger
   namespace: istio-system
-  annotations:
-    flux.weave.works/automated: "false"
-    flux.weave.works/tag.chart-image: semver:~0
 spec:
   releaseName: flagger
   chart:
     repository: https://flagger.app
     name: flagger
-    version: 0.16.0
+    version: 0.22.0
   values:
     slack:
       user: flagger
