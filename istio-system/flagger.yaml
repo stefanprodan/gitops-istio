@@ -1,20 +1,17 @@
-apiVersion: flux.weave.works/v1beta1
+apiVersion: helm.fluxcd.io/v1
 kind: HelmRelease
 metadata:
   name: flagger
   namespace: istio-system
-  annotations:
-    flux.weave.works/automated: "false"
-    flux.weave.works/tag.chart-image: semver:~0
 spec:
   releaseName: flagger
   chart:
     repository: https://flagger.app
     name: flagger
-    version: 0.18.1
+    version: 0.22.0
   values:
     metricsServer: http://prometheus.istio-system:9090
     image:
       repository: weaveworks/flagger
-      tag: 0.18.1
+      tag: 0.22.0
       pullPolicy: IfNotPresent

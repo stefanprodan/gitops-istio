@@ -26,7 +26,7 @@ spec:
     spec:
       containers:
       - name: backend
-        image: quay.io/stefanprodan/podinfo:1.7.0
+        image: stefanprodan/podinfo:3.1.0
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 9898
@@ -40,7 +40,7 @@ spec:
         - --random-error=false
         env:
         - name: PODINFO_UI_COLOR
-          value: blue
+          value: "#34577c"
         livenessProbe:
           exec:
             command:

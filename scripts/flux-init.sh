@@ -19,55 +19,56 @@ TEMP=${REPO_ROOT}/temp
 
 rm -rf ${TEMP} && mkdir ${TEMP}
 
-cat <<EOF >> ${TEMP}/flux-values.yaml
-helmOperator:
-  create: true
-  createCRD: true
-  configureRepositories:
-    enable: true
-    volumeName: repositories-yaml
-    secretName: flux-helm-repositories
-    cacheVolumeName: repositories-cache
-    repositories:
-      - caFile: ""
-        cache: stable-index.yaml
-        certFile: ""
-        keyFile: ""
-        name: stable
-        password: ""
-        url: https://kubernetes-charts.storage.googleapis.com
-        username: ""
-      - caFile: ""
-        cache: istio.io-index.yaml
-        certFile: ""
-        keyFile: ""
-        name: istio.io
-        password: ""
-        url: https://storage.googleapis.com/istio-release/releases/1.3.0/charts
-        username: ""
-      - caFile: ""
-        cache: flagger-index.yaml
-        certFile: ""
-        keyFile: ""
-        name: flagger
-        password: ""
-        url: https://flagger.app
-        username: ""
-EOF
-
-helm repo add fluxcd https://fluxcd.github.io/flux
+helm repo add fluxcd https://charts.fluxcd.io
 
 echo ">>> Installing Flux for ${REPO_URL}"
-helm upgrade -i flux --wait \
+helm upgrade -i flux fluxcd/flux --wait \
 --set git.url=${REPO_URL} \
 --set git.branch=${REPO_BRANCH} \
 --set git.pollInterval=1m \
 --set registry.pollInterval=1m \
---namespace flux \
--f ${TEMP}/flux-values.yaml \
-fluxcd/flux
+--namespace flux
 
-kubectl -n flux rollout status deployment/flux
+cat <<EOF >> ${TEMP}/repositories.yaml
+configureRepositories:
+  enable: true
+  volumeName: repositories-yaml
+  secretName: flux-helm-repositories
+  cacheVolumeName: repositories-cache
+  repositories:
+    - caFile: ""
+      cache: stable-index.yaml
+      certFile: ""
+      keyFile: ""
+      name: stable
+      password: ""
+      url: https://kubernetes-charts.storage.googleapis.com
+      username: ""
+    - caFile: ""
+      cache: istio.io-index.yaml
+      certFile: ""
+      keyFile: ""
+      name: istio.io
+      password: ""
+      url: https://storage.googleapis.com/istio-release/releases/1.4.3/charts
+      username: ""
+    - caFile: ""
+      cache: flagger-index.yaml
+      certFile: ""
+      keyFile: ""
+      name: flagger
+      password: ""
+      url: https://flagger.app
+      username: ""
+EOF
+
+echo ">>> Installing Helm Operator"
+kubectl apply -f https://raw.githubusercontent.com/fluxcd/helm-operator/master/deploy/flux-helm-release-crd.yaml
+helm upgrade -i helm-operator fluxcd/helm-operator --wait \
+--set git.ssh.secretName=flux-git-deploy \
+--set helm.versions=v3 \
+-f ${TEMP}/repositories.yaml \
+--namespace flux
 
 echo '>>> GitHub deploy key'
 kubectl -n flux logs deployment/flux | grep identity.pub | cut -d '"' -f2
