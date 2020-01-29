@@ -43,6 +43,9 @@ cd gitops-istio
 Install Weave Flux and its Helm Operator by specifying your fork URL:
 
 ```bash
+# If you are using Helm v3, create the flux namespace first
+# kubectl create namespace flux
+
 ./scripts/flux-init.sh git@github.com:<YOUR-USERNAME>/gitops-istio
 ```
 
