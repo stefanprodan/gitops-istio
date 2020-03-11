@@ -83,7 +83,7 @@ until kubectl logs -n flux deployment/flux | grep event=refreshed
 do
   sleep 5
 done
-echo "istio sidecar injector ready"
+echo "Github deploy key ready"
 
 # wait until sidecar injector webhook is ready before enabled prod namespace on flux
 echo ">>> Waiting for istio sidecar injector to start"
