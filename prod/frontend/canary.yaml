@@ -1,4 +1,4 @@
-apiVersion: flagger.app/v1alpha3
+apiVersion: flagger.app/v1beta1
 kind: Canary
 metadata:
   name: frontend
@@ -30,9 +30,9 @@ spec:
     # Istio virtual service host names (optional)
     hosts:
     - "*"
-  canaryAnalysis:
+  analysis:
     # schedule interval (default 60s)
-    interval: 10s
+    interval: 15s
     # max number of failed metric checks before rollback
     threshold: 10
     # total number of iterations
@@ -41,25 +41,39 @@ spec:
     match:
       - headers:
           user-agent:
-            regex: "^(?!.*Chrome)(?=.*\bSafari\b).*$"
+            regex: ".*Firefox.*"
+            #regex: "^(?!.*(?:Chrome|Edge)).*Safari"
       - headers:
           cookie:
             regex: "^(.*?;)?(type=insider)(;.*)?$"
+    # Istio Prometheus checks
     metrics:
-    - name: request-success-rate
-      # minimum req success rate (non 5xx responses)
-      # percentage (0-100)
-      threshold: 99
-      interval: 1m
-    - name: request-duration
-      # maximum req duration P99
-      # milliseconds
-      threshold: 500
-      interval: 30s
-    # external checks (optional)
+      - name: error-rate
+        templateRef:
+          name: error-rate
+          namespace: istio-system
+        thresholdRange:
+          max: 1
+        interval: 30s
+      - name: latency
+        templateRef:
+          name: latency
+          namespace: istio-system
+        thresholdRange:
+          max: 500
+        interval: 30s
+    # tests
     webhooks:
-      - name: load-test
+      - name: conformance-test
+        type: pre-rollout
+        timeout: 15s
         url: http://flagger-loadtester.prod/
-        timeout: 5s
         metadata:
-          cmd: "hey -z 1m -q 10 -c 2 -H 'Cookie: type=insider' http://frontend-canary.prod:9898/"
+          type: bash
+          cmd: "curl -sd 'test' http://frontend-canary.prod:9898/token | grep token"
+      - name: load-test
+        type: rollout
+        timeout: 15s
+        url: http://flagger-loadtester.prod/
+        metadata:
+          cmd: "hey -z 1m -q 10 -c 2 -H 'Cookie: type=insider' http://frontend.prod:9898/"
