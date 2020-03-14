@@ -62,6 +62,8 @@ When Flux has write access to your repository it will do the following:
 * creates the frontend deployment and canary
 * creates the backend deployment and canary
 
+![Flux Istio Operator](https://raw.githubusercontent.com/fluxcd/helm-operator-get-started/master/diagrams/flux-istio-operator.png)
+
 You can customize the Istio installation with the `IstioOperator` resource located at `istio/control-plane.yaml`:
 
 ```yaml
@@ -150,7 +152,7 @@ $ fluxctl release --workload=prod:deployment/backend \
 
 Submitting release ...
 WORKLOAD                 STATUS   UPDATES
-prod:deployment/backend  success  backend: quay.io/stefanprodan/podinfo:3.1.0 -> 3.1.1
+prod:deployment/backend  success  backend: stefanprodan/podinfo:3.1.0 -> 3.1.1
 Commit pushed:	ccb4ae7
 Commit applied:	ccb4ae7
 ```
@@ -225,7 +227,7 @@ Trigger a deployment by updating the frontend container image:
 
 ```bash
 $ fluxctl release --workload=prod:deployment/frontend \
---update-image=quay.io/stefanprodan/podinfo:3.1.1
+--update-image=stefanprodan/podinfo:3.1.1
 ```
 
 Flagger detects that the deployment revision changed and starts the A/B testing:
