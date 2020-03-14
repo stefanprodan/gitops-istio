@@ -8,4 +8,4 @@ if [[ ! -x "$(command -v kubectl)" ]]; then
 fi
 
 kubectl -n flux scale deployment flux --replicas=0
-kubectl -n flux scale deployment flux-helm-operator --replicas=0
+kubectl -n flux scale deployment helm-operator --replicas=0

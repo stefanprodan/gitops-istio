@@ -1,7 +1,7 @@
 # gitops-istio
 
 This guide walks you through setting up Istio on a Kubernetes cluster and 
-automating A/B testing and canary deployments with GitOps pipelines.
+automating A/B testing and canary releases with GitOps pipelines.
 
 ![Progressive Delivery GitOps Pipeline](https://raw.githubusercontent.com/weaveworks/flagger/master/docs/diagrams/flagger-gitops-istio.png)
 
@@ -17,12 +17,11 @@ Components:
 * **Helm Operator** CRD controller
     * automates Helm chart releases
 * **Flagger** progressive delivery operator
-    * automates the promotion of canary deployments using Istio routing for traffic shifting and Prometheus metrics for canary analysis
+    * automates the release process using Istio routing for traffic shifting and Prometheus metrics for canary analysis
 
 ### Prerequisites
 
-You'll need a Kubernetes cluster **v1.11** or newer with `LoadBalancer` support, 
-`MutatingAdmissionWebhook` and `ValidatingAdmissionWebhook` admission controllers enabled. 
+You'll need a Kubernetes cluster **v1.11** or newer with `LoadBalancer` support. 
 For testing purposes you can use Minikube with four CPUs and 4GB of memory. 
 
 Install Flux CLI and Helm v3:
@@ -40,12 +39,9 @@ cd gitops-istio
 
 ### Cluster bootstrap
 
-Install Weave Flux and its Helm Operator by specifying your fork URL:
+Install Flux and its Helm Operator by specifying your fork URL:
 
 ```bash
-# If you are using Helm v3, create the flux namespace first
-# kubectl create namespace flux
-
 ./scripts/flux-init.sh git@github.com:<YOUR-USERNAME>/gitops-istio
 ```
 
@@ -57,55 +53,38 @@ check _Allow write access_, paste the Flux public key and click _Add key_.
 
 When Flux has write access to your repository it will do the following:
 
-* creates the `istio-system` and `prod` namespaces
-* creates the Istio CRDs
-* installs Istio Helm Release
-* installs Flagger Helm Release
-* installs Flagger's Grafana Helm Release
+* installs the Istio operator
+* waits for Istio control plane to be ready
+* installs Flagger CRDs and Helm Releases
+* creates the Istio public gateway
+* creates the `prod` namespace
 * creates the load tester deployment
 * creates the frontend deployment and canary
 * creates the backend deployment and canary
-* creates the Istio public gateway 
 
-![Helm Operator](https://raw.githubusercontent.com/fluxcd/helm-operator/master/docs/_files/fluxcd-helm-operator-diagram.png)
-
-The Flux Helm operator provides an extension to Weave Flux that automates Helm Chart releases for it. 
-A Chart release is described through a Kubernetes custom resource named HelmRelease. 
-The Flux daemon synchronizes these resources from git to the cluster, and the Flux Helm operator makes sure 
-Helm charts are released as specified in the resources.
-
-Istio Helm Release example:
+You can customize the Istio installation with the `IstioOperator` resource located at `istio/control-plane.yaml`:
 
 ```yaml
-apiVersion: helm.fluxcd.io/v1
-kind: HelmRelease
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
 metadata:
-  name: istio
   namespace: istio-system
+  name: istio-default
 spec:
-  releaseName: istio
-  chart:
-    repository: https://storage.googleapis.com/istio-release/releases/1.4.3/charts
-    name: istio
-    version: 1.4.3
-  values:
-    gateways:
-      enabled: true
-      istio-ingressgateway:
-        type: LoadBalancer
-    mixer:
-      telemetry:
-        enabled: true
-    prometheus:
-      enabled: true
-      scrapeInterval: 5s
+  profile: default
+  components:
+    pilot:
+      k8s:
+        resources:
+          requests:
+            cpu: 10m
+            memory: 100Mi
 ```
 
-Note that the Istio CRDs have been extracted from the istio-init chart and placed inside the istio-system dir.
-You can update the CRDs by running the `./scripts/istio-init.sh` script.
-
-If you make changes to the Istio configuration and push those to git, Flux will upgrade the Helm release. 
-It can take up to 3 minutes for Flux to sync and apply the changes or you can use `fluxctl sync` to trigger a git sync.
+After modifying the Istio specs, you can push the change to git and Flux will apply it on the cluster. 
+The Istio operator will reconfigure the Istio control plane according to your changes.
+It can take a couple of minutes for Flux to sync and apply the changes, to speed up the apply
+you can use `fluxctl sync` to trigger a git sync.
 
 ### Workloads bootstrap
 
@@ -136,9 +115,9 @@ Check if Flagger has successfully initialized the canaries:
 ```
 kubectl -n prod get canaries
 
-NAME       STATUS        WEIGHT   LASTTRANSITIONTIME
-backend    Initialized   0        2019-04-30T18:53:18Z
-frontend   Initialized   0        2019-04-30T17:50:50Z
+NAME       STATUS        WEIGHT
+backend    Initialized   0
+frontend   Initialized   0
 ```
 
 When the `frontend-primary` deployment comes online, 
@@ -185,6 +164,7 @@ Events:
 
 New revision detected! Scaling up backend.prod
 Starting canary analysis for backend.prod
+Pre-rollout check conformance-test passed
 Advance backend.prod canary weight 5
 Advance backend.prod canary weight 10
 Advance backend.prod canary weight 15
@@ -221,7 +201,7 @@ This is particularly useful for frontend applications that require session affin
 You can enable A/B testing by specifying the HTTP match conditions and the number of iterations:
 
 ```yaml
-  canaryAnalysis:
+  analysis:
     # schedule interval (default 60s)
     interval: 10s
     # max number of failed metric checks before rollback
@@ -232,13 +212,13 @@ You can enable A/B testing by specifying the HTTP match conditions and the numbe
     match:
       - headers:
           user-agent:
-            regex: "^(?!.*Chrome)(?=.*\bSafari\b).*$"
+            regex: ".*Firefox.*"
       - headers:
           cookie:
             regex: "^(.*?;)?(type=insider)(;.*)?$"
 ```
 
-The above configuration will run an analysis for two minutes targeting Safari users and those that 
+The above configuration will run an analysis for two minutes targeting Firefox users and those that 
 have an insider cookie. The frontend configuration can be found at `prod/frontend/canary.yaml`.
 
 Trigger a deployment by updating the frontend container image:
@@ -255,6 +235,7 @@ $ kubectl -n istio-system logs deploy/flagger -f | jq .msg
 
 New revision detected! Scaling up frontend.prod
 Waiting for frontend.prod rollout to finish: 0 of 1 updated replicas are available
+Pre-rollout check conformance-test passed
 Advance frontend.prod canary iteration 1/10
 Advance frontend.prod canary iteration 2/10
 Advance frontend.prod canary iteration 3/10
@@ -330,11 +311,6 @@ metadata:
   name: flagger
   namespace: istio-system
 spec:
-  releaseName: flagger
-  chart:
-    repository: https://flagger.app
-    name: flagger
-    version: 0.22.0
   values:
     slack:
       user: flagger
@@ -352,18 +328,7 @@ maximum number of failed checks:
 
 ![Slack Notifications](https://raw.githubusercontent.com/weaveworks/flagger/master/docs/screens/slack-canary-failed.png)
 
-Besides Slack, you can use Alertmanager to trigger alerts when a canary deployment failed:
-
-```yaml
-  - alert: canary_rollback
-    expr: flagger_canary_status > 1
-    for: 1m
-    labels:
-      severity: warning
-    annotations:
-      summary: "Canary failed"
-      description: "Workload {{ $labels.name }} namespace {{ $labels.namespace }}"
-```
+For configuring alerting at canary level for Slack, MS Teams, Discord or Rocket see the [docs](https://docs.flagger.app/usage/alerting#canary-configuration).
 
 ### Getting Help
 

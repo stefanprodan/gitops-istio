@@ -1,0 +1,54 @@
+apiVersion: flagger.app/v1beta1
+kind: MetricTemplate
+metadata:
+  name: error-rate
+  namespace: istio-system
+spec:
+  provider:
+    type: prometheus
+    address: http://prometheus.istio-system:9090
+  query: |
+    100 - sum(
+        rate(
+            istio_requests_total{
+                reporter="destination",
+                destination_workload_namespace="{{ namespace }}",
+                destination_workload=~"{{ target }}",
+                response_code!~"5.*"
+            }[{{ interval }}]
+        )
+    )
+    /
+    sum(
+        rate(
+            istio_requests_total{
+                reporter="destination",
+                destination_workload_namespace="{{ namespace }}",
+                destination_workload=~"{{ target }}"
+            }[{{ interval }}]
+        )
+    )
+    * 100
+---
+apiVersion: flagger.app/v1beta1
+kind: MetricTemplate
+metadata:
+  name: latency
+  namespace: istio-system
+spec:
+  provider:
+    type: prometheus
+    address: http://prometheus.istio-system:9090
+  query: |
+    histogram_quantile(
+        0.99,
+        sum(
+            rate(
+                istio_request_duration_milliseconds_bucket{
+                    reporter="destination",
+                    destination_workload_namespace="{{ namespace }}",
+                    destination_workload=~"{{ target }}"
+                }[{{ interval }}]
+            )
+        ) by (le)
+    )
