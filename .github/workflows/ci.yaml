@@ -1,0 +1,13 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  kubeval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: stefanprodan/kube-tools@v1
+        with:
+          command: |
+            kubeval -d istio,flagger,prod --strict --ignore-missing-schemas
