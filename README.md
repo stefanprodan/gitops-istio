@@ -84,7 +84,7 @@ spec:
             memory: 100Mi
 ```
 
-After modifying the Istio specs, you can push the change to git and Flux will apply it on the cluster. 
+After modifying the Istio settings, you can push the change to git and Flux will apply it on the cluster. 
 The Istio operator will reconfigure the Istio control plane according to your changes.
 It can take a couple of minutes for Flux to sync and apply the changes, to speed up the apply
 you can use `fluxctl sync` to trigger a git sync.
@@ -125,6 +125,14 @@ frontend   Initialized   0
 
 When the `frontend-primary` deployment comes online, 
 Flagger will route all traffic to the primary pods and scale to zero the `frontend` deployment.
+
+Find the Istio ingress gateway address with:
+
+```bash
+kubectl -n istio-system get svc istio-ingressgateway -ojson | jq .status.loadBalancer.ingress
+```
+
+Open a browser and navigate to the ingress address, you'll see the frontend UI.
 
 ### Canary releases
 
@@ -192,8 +200,6 @@ Note that if new changes are applied to the deployment during the canary analysi
 Besides weighted routing, Flagger can be configured to route traffic to the canary based on HTTP match conditions. 
 In an A/B testing scenario, you'll be using HTTP headers or cookies to target a certain segment of your users. 
 This is particularly useful for frontend applications that require session affinity.
-
-![Flagger A/B Testing](https://raw.githubusercontent.com/weaveworks/flagger/master/docs/diagrams/flagger-abtest-steps.png)
 
 You can enable A/B testing by specifying the HTTP match conditions and the number of iterations:
 
