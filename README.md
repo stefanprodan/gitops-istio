@@ -64,7 +64,8 @@ When Flux has write access to your repository it will do the following:
 
 ![Flux Istio Operator](https://raw.githubusercontent.com/fluxcd/helm-operator-get-started/master/diagrams/flux-istio-operator.png)
 
-You can customize the Istio installation with the `IstioOperator` resource located at `istio/control-plane.yaml`:
+You can customize the Istio installation with the `IstioOperator` resource located at
+[istio/control-plane.yaml](https://github.com/stefanprodan/gitops-istio/blob/master/istio/control-plane.yaml):
 
 ```yaml
 apiVersion: install.istio.io/v1alpha1
@@ -125,22 +126,21 @@ frontend   Initialized   0
 When the `frontend-primary` deployment comes online, 
 Flagger will route all traffic to the primary pods and scale to zero the `frontend` deployment.
 
-### Automated canary promotion
+### Canary releases
 
 Flagger implements a control loop that gradually shifts traffic to the canary while measuring key performance indicators
 like HTTP requests success rate, requests average duration and pod health.
 Based on analysis of the KPIs a canary is promoted or aborted, and the analysis result is published to Slack.
 
-A canary deployment is triggered by changes in any of the following objects:
+A canary analysis is triggered by changes in any of the following objects:
 * Deployment PodSpec (container image, command, ports, env, etc)
-* ConfigMaps mounted as volumes or mapped to environment variables
-* Secrets mounted as volumes or mapped to environment variables
+* ConfigMaps and Secrets mounted as volumes or mapped to environment variables
 
 For workloads that are not receiving constant traffic Flagger can be configured with a webhook, 
-that when called, will start a load test for the target workload. The backend load test webhook configuration can be found
-at `prod/backend/canary.yaml`.
+that when called, will start a load test for the target workload. The canary configuration can be found
+at [prod/backend/canary.yaml](https://github.com/stefanprodan/gitops-istio/blob/master/prod/backend/canary.yaml).
 
-![Flagger Load Testing Webhook](https://raw.githubusercontent.com/weaveworks/flagger/master/docs/diagrams/flagger-load-testing.png)
+![Flagger Canary Release](https://raw.githubusercontent.com/weaveworks/flagger/master/docs/diagrams/flagger-canary-steps.png)
 
 Trigger a canary deployment for the backend app by updating the container image:
 
@@ -168,20 +168,13 @@ New revision detected! Scaling up backend.prod
 Starting canary analysis for backend.prod
 Pre-rollout check conformance-test passed
 Advance backend.prod canary weight 5
-Advance backend.prod canary weight 10
-Advance backend.prod canary weight 15
-Advance backend.prod canary weight 20
-Advance backend.prod canary weight 25
-Advance backend.prod canary weight 30
-Advance backend.prod canary weight 35
-Advance backend.prod canary weight 40
-Advance backend.prod canary weight 45
+...
 Advance backend.prod canary weight 50
 Copying backend.prod template spec to backend-primary.prod
 Promotion completed! Scaling down backend.prod
 ```
 
-During the analysis the canary’s progress can be monitored with Grafana. You can access Grafana using port forwarding:
+During the analysis the canary’s progress can be monitored with Grafana. You can access the dashboard using port forwarding:
 
 ```bash
 kubectl -n istio-system port-forward svc/flagger-grafana 3000:80
@@ -194,11 +187,13 @@ http://localhost:3000/d/flagger-istio/istio-canary?refresh=10s&orgId=1&var-names
 
 Note that if new changes are applied to the deployment during the canary analysis, Flagger will restart the analysis phase.
 
-### Automated A/B testing
+### A/B testing
 
 Besides weighted routing, Flagger can be configured to route traffic to the canary based on HTTP match conditions. 
 In an A/B testing scenario, you'll be using HTTP headers or cookies to target a certain segment of your users. 
 This is particularly useful for frontend applications that require session affinity.
+
+![Flagger A/B Testing](https://raw.githubusercontent.com/weaveworks/flagger/master/docs/diagrams/flagger-abtest-steps.png)
 
 You can enable A/B testing by specifying the HTTP match conditions and the number of iterations:
 
@@ -239,14 +234,7 @@ New revision detected! Scaling up frontend.prod
 Waiting for frontend.prod rollout to finish: 0 of 1 updated replicas are available
 Pre-rollout check conformance-test passed
 Advance frontend.prod canary iteration 1/10
-Advance frontend.prod canary iteration 2/10
-Advance frontend.prod canary iteration 3/10
-Advance frontend.prod canary iteration 4/10
-Advance frontend.prod canary iteration 5/10
-Advance frontend.prod canary iteration 6/10
-Advance frontend.prod canary iteration 7/10
-Advance frontend.prod canary iteration 8/10
-Advance frontend.prod canary iteration 9/10
+...
 Advance frontend.prod canary iteration 10/10
 Copying frontend.prod template spec to frontend-primary.prod
 Waiting for frontend-primary.prod rollout to finish: 1 of 2 updated replicas are available
@@ -263,7 +251,32 @@ prod        frontend  Progressing   100
 prod        backend   Succeeded     0
 ```
 
-### Automated rollback
+### Rollback based on Istio metrics
+
+Flagger makes use of the metrics provided by Istio telemetry to validate the canary workload.
+The frontend app [analysis](https://github.com/stefanprodan/gitops-istio/blob/master/prod/frontend/canary.yaml)
+defines two metric checks: 
+
+```yaml
+    metrics:
+      - name: error-rate
+        templateRef:
+          name: error-rate
+          namespace: istio-system
+        thresholdRange:
+          max: 1
+        interval: 30s
+      - name: latency
+        templateRef:
+          name: latency
+          namespace: istio-system
+        thresholdRange:
+          max: 500
+        interval: 30s
+```
+
+The Prometheus queries used for checking the error rate and latency are located at
+[flagger/istio-metrics.yaml](https://github.com/stefanprodan/gitops-istio/blob/master/flagger/istio-metrics.yaml).
 
 During the canary analysis you can generate HTTP 500 errors and high latency to test Flagger's rollback.
 
@@ -283,23 +296,22 @@ When the number of failed checks reaches the canary analysis threshold, the traf
 the canary is scaled to zero and the rollout is marked as failed.
 
 ```text
-kubectl -n prod describe canary/frontend
+$ kubectl -n istio-system logs deploy/flagger -f | jq .msg
 
-Status:
-  Failed Checks:         2
-  Phase:                 Failed
-Events:
-  Type     Reason  Age   From     Message
-  ----     ------  ----  ----     -------
-  Normal   Synced  3m    flagger  Starting canary deployment for frontend.prod
-  Normal   Synced  3m    flagger  Advance frontend.prod canary iteration 1/10
-  Normal   Synced  3m    flagger  Advance frontend.prod canary iteration 2/10
-  Normal   Synced  3m    flagger  Advance frontend.prod canary iteration 3/10
-  Normal   Synced  3m    flagger  Halt frontend.prod advancement success rate 69.17% < 99%
-  Normal   Synced  2m    flagger  Halt frontend.prod advancement success rate 61.39% < 99%
-  Warning  Synced  2m    flagger  Rolling back frontend.prod failed checks threshold reached 2
-  Warning  Synced  1m    flagger  Canary failed! Scaling down frontend.prod
+New revision detected! Scaling up frontend.prod
+Pre-rollout check conformance-test passed
+Advance frontend.prod canary iteration 1/10
+Halt frontend.prod advancement error-rate 31 > 1
+Halt frontend.prod advancement latency 2000 > 500
+...
+Rolling back frontend.prod failed checks threshold reached 10
+Canary failed! Scaling down frontend.prod
 ```
+
+You can extend the analysis with custom metric checks targeting
+[Prometheus](https://docs.flagger.app/usage/metrics#prometheus),
+[Datadog](https://docs.flagger.app/usage/metrics#datadog) and
+[Amazon CloudWatch](https://docs.flagger.app/usage/metrics#amazon-cloudwatch).
 
 ### Alerting
 
