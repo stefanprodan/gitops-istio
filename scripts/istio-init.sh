@@ -21,6 +21,8 @@ helm template ${REPO_ROOT}/istio-${VERSION}/install/kubernetes/operator/charts/i
   --set hub=docker.io/istio \
   --set tag=${VERSION} \
   --set operatorNamespace=istio-operator \
-  --set istioNamespace=istio-system  > ${REPO_ROOT}/istio/operator.yaml
+  --set istioNamespace=istio-system  > ${REPO_ROOT}/istio/operator/manifests.yaml
 
 rm -rf ${REPO_ROOT}/istio-${VERSION}
+
+echo "Istio operator ${VERSION} manifests updated"
