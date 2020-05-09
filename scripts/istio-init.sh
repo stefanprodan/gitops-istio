@@ -7,8 +7,20 @@ if [[ ! -x "$(command -v kubectl)" ]]; then
     exit 1
 fi
 
+if [[ ! -x "$(command -v helm)" ]]; then
+    echo "helm not found"
+    exit 1
+fi
+
+VERSION=1.5.2
 REPO_ROOT=$(git rev-parse --show-toplevel)
 
-curl -s https://istio.io/operator.yaml | grep -v '\.\.\.' > ${REPO_ROOT}/istio/operator.yaml
+curl -sL https://istio.io/downloadIstio | ISTIO_VERSION=${VERSION} sh -
 
-curl -s https://raw.githubusercontent.com/weaveworks/flagger/master/artifacts/flagger/crd.yaml > ${REPO_ROOT}/flagger/flagger-crds.yaml
+helm template ${REPO_ROOT}/istio-${VERSION}/install/kubernetes/operator/charts/istio-operator/ \
+  --set hub=docker.io/istio \
+  --set tag=${VERSION} \
+  --set operatorNamespace=istio-operator \
+  --set istioNamespace=istio-system  > ${REPO_ROOT}/istio/operator.yaml
+
+rm -rf ${REPO_ROOT}/istio-${VERSION}
