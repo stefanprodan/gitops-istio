@@ -225,7 +225,7 @@ spec:
       serviceAccountName: istio-operator
       containers:
         - name: istio-operator
-          image: docker.io/istio/operator:1.6.7
+          image: docker.io/istio/operator:1.6.8
           command:
           - operator
           - server
