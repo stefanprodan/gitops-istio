@@ -12,14 +12,15 @@ if [[ ! -x "$(command -v helm)" ]]; then
     exit 1
 fi
 
-VERSION=1.5.2
+VERSION=1.7.0
 REPO_ROOT=$(git rev-parse --show-toplevel)
 
 curl -sL https://istio.io/downloadIstio | ISTIO_VERSION=${VERSION} sh -
 
-helm template ${REPO_ROOT}/istio-${VERSION}/install/kubernetes/operator/charts/istio-operator/ \
+helm template ${REPO_ROOT}/istio-${VERSION}/manifests/charts/istio-operator \
   --set hub=docker.io/istio \
   --set tag=${VERSION} \
+  --set enableCRDTemplates=true \
   --set operatorNamespace=istio-operator \
   --set istioNamespace=istio-system  > ${REPO_ROOT}/istio/operator/manifests.yaml
 

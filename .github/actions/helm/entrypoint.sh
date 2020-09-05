@@ -1,6 +1,6 @@
 #!/bin/sh -l
 
-VERSION=3.2.1
+VERSION=3.3.1
 curl -sL https://get.helm.sh/helm-v${VERSION}-linux-amd64.tar.gz | tar xz
 
 mkdir -p $GITHUB_WORKSPACE/bin

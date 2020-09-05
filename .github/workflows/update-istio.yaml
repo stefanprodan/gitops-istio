@@ -28,6 +28,7 @@ jobs:
           helm template ${ISTIO_DIR}/manifests/charts/istio-operator/ \
           --set hub=docker.io/istio \
           --set tag=${ISTIO_VER} \
+          --set enableCRDTemplates=true \
           --set operatorNamespace=istio-operator \
           --set istioNamespace=istio-system  > ./istio/operator/manifests.yaml
 
