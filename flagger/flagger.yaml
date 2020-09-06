@@ -8,7 +8,7 @@ spec:
   chart:
     repository: https://flagger.app
     name: flagger
-    version: 0.25.0
+    version: 1.1.0
   values:
     meshProvider: istio
     metricsServer: http://prometheus.istio-system:9090
