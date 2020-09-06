@@ -499,8 +499,47 @@ spec:
                             format: string
                             type: string
                           type: array
+                apex:
+                  description: Metadata to add to the apex service
+                  type: object
+                  properties:
+                    labels:
+                      type: object
+                      additionalProperties:
+                        type: string
+                    annotations:
+                      type: object
+                      additionalProperties:
+                        type: string
+                primary:
+                  description: Metadata to add to the primary service
+                  type: object
+                  properties:
+                    labels:
+                      type: object
+                      additionalProperties:
+                        type: string
+                    annotations:
+                      type: object
+                      additionalProperties:
+                        type: string
+                canary:
+                  description: Metadata to add to the canary service
+                  type: object
+                  properties:
+                    labels:
+                      type: object
+                      additionalProperties:
+                        type: string
+                    annotations:
+                      type: object
+                      additionalProperties:
+                        type: string
             skipAnalysis:
               description: Skip analysis and promote canary
+              type: boolean
+            revertOnDeletion:
+              description: Revert mutated resources to original spec on deletion
               type: boolean
             analysis:
               description: Canary analysis for this canary
@@ -523,7 +562,10 @@ spec:
                   description: Max traffic percentage routed to canary
                   type: number
                 stepWeight:
-                  description: Incremental traffic percentage step
+                  description: Incremental traffic percentage step for the analysis phase
+                  type: number
+                stepWeightPromotion:
+                  description: Incremental traffic percentage step for the promotion phase
                   type: number
                 mirror:
                   description: Mirror traffic to canary
@@ -557,8 +599,15 @@ spec:
                               format: string
                               type: string
                             regex:
+                              description: RE2 style regex-based match (https://github.com/google/re2/wiki/Syntax)
                               format: string
                               type: string
+                      sourceLabels:
+                        description: Applicable only when the 'mesh' gateway is included in the service.gateways list
+                        type: object
+                        additionalProperties:
+                          format: string
+                          type: string
                 metrics:
                   description: Metric check list for this canary
                   type: array
@@ -650,6 +699,8 @@ spec:
                 - Finalising
                 - Succeeded
                 - Failed
+                - Terminating
+                - Terminated
             canaryWeight:
               description: Traffic weight percentage routed to canary
               type: number
@@ -796,11 +847,11 @@ spec:
         spec:
           oneOf:
             - required:
-              - type
-              - address
+                - type
+                - address
             - required:
-              - type
-              - secretRef
+                - type
+                - secretRef
           properties:
             type:
               description: Type of this provider
