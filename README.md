@@ -31,10 +31,10 @@ In this workshop you'll be using Flagger and Prometheus to automate Canary Relea
 You'll need a Kubernetes cluster **v1.16** or newer with `LoadBalancer` support. 
 For testing purposes you can use Minikube with 2 CPUs and 4GB of memory. 
 
-Install the `flux` CLI and `yq` with Homebrew:
+Install the `flux` CLI with Homebrew:
 
 ```bash
-brew install fluxcd/tap/flux yq
+brew install fluxcd/tap/flux
 ```
 
 Binaries for macOS, Windows and Linux AMD64/ARM are available
@@ -76,7 +76,7 @@ flux bootstrap git \
 ```
 
 The above command requires ssh-agent, if you're using Windows see
-[flux boostrap github](https://toolkit.fluxcd.io/guides/installation/#github-and-github-enterprise) documentation.
+[flux boostrap github](https://fluxcd.io/docs/guides/installation/#github-and-github-enterprise) documentation.
 
 At bootstrap, Flux generates an SSH key and prints the public key.
 In order to sync your cluster state with git you need to copy the public key and create a deploy key with write 
@@ -220,7 +220,7 @@ For workloads that are not receiving constant traffic Flagger can be configured 
 that when called, will start a load test for the target workload. The canary configuration can be found
 at [apps/backend/canary.yaml](https://github.com/stefanprodan/gitops-istio/blob/main/apps/backend/canary.yaml).
 
-![Flagger Canary Release](https://raw.githubusercontent.com/weaveworks/flagger/master/docs/diagrams/flagger-canary-steps.png)
+![Flagger Canary Release](https://raw.githubusercontent.com/fluxcd/flagger/main/docs/diagrams/flagger-canary-steps.png)
 
 Pull the changes from GitHub:
 
@@ -280,7 +280,7 @@ kubectl -n istio-system port-forward svc/flagger-grafana 3000:80
 The Istio dashboard URL is 
 http://localhost:3000/d/flagger-istio/istio-canary?refresh=10s&orgId=1&var-namespace=prod&var-primary=backend-primary&var-canary=backend
 
-![Canary Deployment](https://raw.githubusercontent.com/weaveworks/flagger/master/docs/screens/demo-backend-dashboard.png)
+![Canary Deployment](https://raw.githubusercontent.com/fluxcd/flagger/main/docs/screens/demo-backend-dashboard.png)
 
 Note that if new changes are applied to the deployment during the canary analysis, Flagger will restart the analysis phase.
 
@@ -421,7 +421,7 @@ For configuring alerting of the canary analysis for Slack, MS Teams, Discord or 
 If you have any questions about progressive delivery:
 
 * Invite yourself to the [CNCF community slack](https://slack.cncf.io/)
-  and join the [#flux](https://cloud-native.slack.com/messages/flux/) and [#flagger](https://cloud-native.slack.com/messages/flagger/) channel.
+  and join the [#flux](https://cloud-native.slack.com/messages/flux/) and [#flagger](https://cloud-native.slack.com/messages/flagger/) channels.
 * Check out the [Flux talks section](https://fluxcd.io/community/#talks) and to see a list of online talks,
   hands-on training and meetups.
 
