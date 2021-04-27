@@ -1,6 +1,7 @@
 # gitops-istio
 
 [![e2e](https://github.com/stefanprodan/gitops-istio/workflows/e2e/badge.svg)](https://github.com/stefanprodan/gitops-istio/actions)
+[![license](https://img.shields.io/github/license/stefanprodan/gitops-istio.svg)](https://github.com/stefanprodan/gitops-istio/blob/main/LICENSE)
 
 This is a self-paced workshop where you will get hands-on experience with GitOps and
 Progressive Delivery using Kubernetes and Istio.
