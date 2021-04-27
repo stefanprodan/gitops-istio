@@ -1,5 +1,7 @@
 # gitops-istio
 
+[![e2e](https://github.com/stefanprodan/gitops-istio/workflows/e2e/badge.svg)](https://github.com/stefanprodan/gitops-istio/actions)
+
 This guide walks you through setting up Istio on a Kubernetes cluster and 
 automating A/B testing and canary releases with GitOps pipelines.
 
@@ -22,10 +24,10 @@ Components:
 You'll need a Kubernetes cluster **v1.16** or newer with `LoadBalancer` support. 
 For testing purposes you can use Minikube with four CPUs and 4GB of memory. 
 
-Install Flux CLI:
+Install Flux CLI and yq:
 
 ```bash
-brew install fluxcd/tap/flux
+brew install fluxcd/tap/flux yq
 ```
 
 Fork this repository and clone it:
@@ -37,13 +39,16 @@ cd gitops-istio
 
 ### Cluster bootstrap
 
-Install Flux and its Helm Operator by specifying your fork URL:
+Install Flux by specifying your fork URL:
 
 ```bash
-./scripts/flux-init.sh git@github.com:<YOUR-USERNAME>/gitops-istio
+flux bootstrap git \
+  --url=ssh://git@github.com/<YOUR-USERNAME>/gitops-istio \
+  --branch=main \
+  --path=clusters/my-cluster
 ```
 
-At startup, Flux generates a SSH key and logs the public key. The above command will print the public key. 
+At bootstrap, Flux generates an SSH key and logs the public key. The above command will print the public key. 
 
 In order to sync your cluster state with git you need to copy the public key and create a deploy key with write 
 access on your GitHub repository. On GitHub go to _Settings > Deploy keys_ click on _Add deploy key_, 
@@ -72,7 +77,7 @@ metadata:
   namespace: istio-system
   name: istio-default
 spec:
-  profile: default
+  profile: demo
   components:
     pilot:
       k8s:
@@ -84,8 +89,6 @@ spec:
 
 After modifying the Istio settings, you can push the change to git and Flux will apply it on the cluster. 
 The Istio operator will reconfigure the Istio control plane according to your changes.
-It can take a couple of minutes for Flux to sync and apply the changes, to speed up the apply
-you can use `flux reconcile ks flux-system --with-source` to trigger a git sync.
 
 ### Workloads bootstrap
 
@@ -144,26 +147,37 @@ A canary analysis is triggered by changes in any of the following objects:
 
 For workloads that are not receiving constant traffic Flagger can be configured with a webhook, 
 that when called, will start a load test for the target workload. The canary configuration can be found
-at [prod/backend/canary.yaml](https://github.com/stefanprodan/gitops-istio/blob/master/prod/backend/canary.yaml).
+at [apps/backend/canary.yaml](https://github.com/stefanprodan/gitops-istio/blob/main/apps/backend/canary.yaml).
 
 ![Flagger Canary Release](https://raw.githubusercontent.com/weaveworks/flagger/master/docs/diagrams/flagger-canary-steps.png)
 
-Trigger a canary deployment for the backend app by updating the container image:
+Pull the changes from GitHub:
 
-```bash
-$ export FLUX_FORWARD_NAMESPACE=flux
-
-$ fluxctl release --workload=prod:deployment/backend \
---update-image=stefanprodan/podinfo:3.1.1
-
-Submitting release ...
-WORKLOAD                 STATUS   UPDATES
-prod:deployment/backend  success  backend: stefanprodan/podinfo:3.1.0 -> 3.1.1
-Commit pushed:	ccb4ae7
-Commit applied:	ccb4ae7
+```sh
+git pull origin main
 ```
 
-Flagger detects that the deployment revision changed and starts a new rollout:
+To trigger a canary deployment for the backend app, bump the container image:
+
+```bash
+yq e '.images[0].newTag="5.0.1"' -i ./apps/backend/kustomization.yaml
+```
+
+Commit and push changes:
+
+```bash
+git add -A && \
+git commit -m "backend 5.0.1" && \
+git push origin main
+```
+
+Tell Flux to pull the changes or wait one minute for Flux to detect the changes:
+
+```bash
+flux reconcile kustomization flux-system --with-source
+```
+
+After a couple of seconds, Flagger detects that the deployment revision changed and starts a new rollout:
 
 ```bash
 $ kubectl -n prod describe canary backend
@@ -220,13 +234,18 @@ You can enable A/B testing by specifying the HTTP match conditions and the numbe
 ```
 
 The above configuration will run an analysis for two minutes targeting Firefox users and those that 
-have an insider cookie. The frontend configuration can be found at `prod/frontend/canary.yaml`.
+have an insider cookie. The frontend configuration can be found at `apps/frontend/canary.yaml`.
 
 Trigger a deployment by updating the frontend container image:
 
 ```bash
-$ fluxctl release --workload=prod:deployment/frontend \
---update-image=stefanprodan/podinfo:3.1.1
+yq e '.images[0].newTag="5.0.1"' -i ./apps/frontend/kustomization.yaml
+
+git add -A && \
+git commit -m "backend 5.0.1" && \
+git push origin main
+
+flux reconcile source git flux-system
 ```
 
 Flagger detects that the deployment revision changed and starts the A/B testing:
@@ -280,7 +299,7 @@ defines two metric checks:
 ```
 
 The Prometheus queries used for checking the error rate and latency are located at
-[flagger/istio-metrics.yaml](https://github.com/stefanprodan/gitops-istio/blob/master/flagger/istio-metrics.yaml).
+[flagger-metrics.yaml](https://github.com/stefanprodan/gitops-istio/blob/main/istio/gateway/flagger-metrics.yaml).
 
 During the canary analysis you can generate HTTP 500 errors and high latency to test Flagger's rollback.
 
