@@ -4,11 +4,4 @@ metadata:
   namespace: istio-system
   name: istio-default
 spec:
-  profile: default
-  components:
-    pilot:
-      k8s:
-        resources:
-          requests:
-            cpu: 10m
-            memory: 100Mi
+  profile: demo

@@ -25,12 +25,10 @@ jobs:
           ISTIO_VER=${ISTIO_DIR##./istio-}
 
           echo "Build manifests for ${ISTIO_VER} in dir ${ISTIO_DIR}"
-          helm template ${ISTIO_DIR}/manifests/charts/istio-operator/ \
-          --set hub=docker.io/istio \
-          --set tag=${ISTIO_VER} \
-          --set enableCRDTemplates=true \
-          --set operatorNamespace=istio-operator \
-          --set istioNamespace=istio-system  > ./istio/operator/manifests.yaml
+          helm template --include-crds \
+          ${ISTIO_DIR}/manifests/charts/istio-operator/ > ./istio/operator/manifests.yaml
+
+          cat ${ISTIO_DIR}/samples/addons/prometheus.yaml > ./istio/system/prometheus.yaml
 
           rm -rf ${ISTIO_DIR}
 
