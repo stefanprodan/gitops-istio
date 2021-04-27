@@ -11,23 +11,21 @@ Components:
     * manages the traffic flows between microservices, enforcing access policies and aggregating telemetry data
 * **Prometheus** monitoring system  
     * time series database that collects and stores the service mesh metrics
-* **Flux** GitOps operator
+* **Flux** GitOps Toolkit
     * syncs YAMLs and Helm charts between git and clusters
     * scans container registries and deploys new images
-* **Helm Operator** CRD controller
-    * automates Helm chart releases
 * **Flagger** progressive delivery operator
     * automates the release process using Istio routing for traffic shifting and Prometheus metrics for canary analysis
 
 ### Prerequisites
 
-You'll need a Kubernetes cluster **v1.11** or newer with `LoadBalancer` support. 
+You'll need a Kubernetes cluster **v1.16** or newer with `LoadBalancer` support. 
 For testing purposes you can use Minikube with four CPUs and 4GB of memory. 
 
-Install Flux CLI and Helm v3:
+Install Flux CLI:
 
 ```bash
-brew install fluxctl helm
+brew install fluxcd/tap/flux
 ```
 
 Fork this repository and clone it:
@@ -51,11 +49,11 @@ In order to sync your cluster state with git you need to copy the public key and
 access on your GitHub repository. On GitHub go to _Settings > Deploy keys_ click on _Add deploy key_, 
 check _Allow write access_, paste the Flux public key and click _Add key_.
 
-When Flux has write access to your repository it will do the following:
+When Flux has access to your repository it will do the following:
 
 * installs the Istio operator
 * waits for Istio control plane to be ready
-* installs Flagger CRDs and Helm Releases
+* installs Flagger and Grafana
 * creates the Istio public gateway
 * creates the `prod` namespace
 * creates the load tester deployment
@@ -65,7 +63,7 @@ When Flux has write access to your repository it will do the following:
 ![Flux Istio Operator](https://raw.githubusercontent.com/fluxcd/helm-operator-get-started/master/diagrams/flux-istio-operator.png)
 
 You can customize the Istio installation with the `IstioOperator` resource located at
-[istio/control-plane.yaml](https://github.com/stefanprodan/gitops-istio/blob/master/istio/control-plane.yaml):
+[istio/system/profile.yaml](https://github.com/stefanprodan/gitops-istio/blob/main/istio/system/profile.yaml):
 
 ```yaml
 apiVersion: install.istio.io/v1alpha1
@@ -87,7 +85,7 @@ spec:
 After modifying the Istio settings, you can push the change to git and Flux will apply it on the cluster. 
 The Istio operator will reconfigure the Istio control plane according to your changes.
 It can take a couple of minutes for Flux to sync and apply the changes, to speed up the apply
-you can use `fluxctl sync` to trigger a git sync.
+you can use `flux reconcile ks flux-system --with-source` to trigger a git sync.
 
 ### Workloads bootstrap
 
