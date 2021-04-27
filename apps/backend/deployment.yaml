@@ -26,7 +26,7 @@ spec:
     spec:
       containers:
       - name: backend
-        image: stefanprodan/podinfo:3.1.0
+        image: ghcr.io/stefanprodan/podinfo:5.0.0
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 9898
@@ -36,8 +36,6 @@ spec:
         - ./podinfo
         - --port=9898
         - --level=info
-        - --random-delay=false
-        - --random-error=false
         env:
         - name: PODINFO_UI_COLOR
           value: "#34577c"
@@ -64,5 +62,5 @@ spec:
             cpu: 2000m
             memory: 512Mi
           requests:
-            cpu: 100m
-            memory: 64Mi
+            cpu: 10m
+            memory: 16Mi

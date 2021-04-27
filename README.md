@@ -1,33 +1,55 @@
 # gitops-istio
 
-This guide walks you through setting up Istio on a Kubernetes cluster and 
-automating A/B testing and canary releases with GitOps pipelines.
+[![e2e](https://github.com/stefanprodan/gitops-istio/workflows/e2e/badge.svg)](https://github.com/stefanprodan/gitops-istio/actions)
+[![license](https://img.shields.io/github/license/stefanprodan/gitops-istio.svg)](https://github.com/stefanprodan/gitops-istio/blob/main/LICENSE)
+
+This is a self-paced workshop where you will get hands-on experience with GitOps and
+Progressive Delivery using Kubernetes and Istio.
+
+## Introduction
+
+### What is GitOps?
+
+GitOps is a way to do Continuous Delivery, it works by using Git as a source of truth
+for declarative infrastructure and workloads.
+For Kubernetes this means using `git push` instead of `kubectl apply/delete` or `helm install/upgrade`.
+
+In this workshop you'll be using GitHub to host the config repository and Flux as the GitOps delivery solution.
+
+### What is Progressive Delivery?
+
+Progressive delivery is an umbrella term for advanced deployment patterns like canaries, feature flags and A/B testing.
+Progressive delivery techniques are used to reduce the risk of introducing a new software version in production
+by giving app developers and SRE teams a fine-grained control over the blast radius.
+
+In this workshop you'll be using Flagger and Prometheus to automate Canary Releases and A/B Testing for your applications.
 
 ![Progressive Delivery GitOps Pipeline](https://raw.githubusercontent.com/weaveworks/flagger/master/docs/diagrams/flagger-gitops-istio.png)
 
-Components:
+## Prerequisites
 
-* **Istio** service mesh
-    * manages the traffic flows between microservices, enforcing access policies and aggregating telemetry data
-* **Prometheus** monitoring system  
-    * time series database that collects and stores the service mesh metrics
-* **Flux** GitOps operator
-    * syncs YAMLs and Helm charts between git and clusters
-    * scans container registries and deploys new images
-* **Helm Operator** CRD controller
-    * automates Helm chart releases
-* **Flagger** progressive delivery operator
-    * automates the release process using Istio routing for traffic shifting and Prometheus metrics for canary analysis
+You'll need a Kubernetes cluster **v1.16** or newer with `LoadBalancer` support. 
+For testing purposes you can use Minikube with 2 CPUs and 4GB of memory. 
 
-### Prerequisites
-
-You'll need a Kubernetes cluster **v1.11** or newer with `LoadBalancer` support. 
-For testing purposes you can use Minikube with four CPUs and 4GB of memory. 
-
-Install Flux CLI and Helm v3:
+Install the `flux` CLI and `yq` with Homebrew:
 
 ```bash
-brew install fluxctl helm
+brew install fluxcd/tap/flux yq
+```
+
+Binaries for macOS, Windows and Linux AMD64/ARM are available
+to download on the [flux2 release page](https://github.com/fluxcd/flux2/releases).
+
+Verify that your cluster satisfies the prerequisites with:
+
+```bash
+flux check --pre
+```
+
+Install `jq` and `yq` with Homebrew:
+
+```bash
+brew install jq yq
 ```
 
 Fork this repository and clone it:
@@ -37,44 +59,91 @@ git clone https://github.com/<YOUR-USERNAME>/gitops-istio
 cd gitops-istio
 ```
 
-### Cluster bootstrap
+## Cluster bootstrap
 
-Install Flux and its Helm Operator by specifying your fork URL:
+With `flux bootstrap` command you can install Flux on a Kubernetes cluster
+and configure it to manage itself from a Git repository.
+If the Flux components are present on the cluster,
+the bootstrap command will perform an upgrade if needed.
+
+Bootstrap Flux by specifying your GitHub repository fork URL:
 
 ```bash
-./scripts/flux-init.sh git@github.com:<YOUR-USERNAME>/gitops-istio
+flux bootstrap git \
+  --url=ssh://git@github.com/<YOUR-USERNAME>/gitops-istio \
+  --branch=main \
+  --path=clusters/my-cluster
 ```
 
-At startup, Flux generates a SSH key and logs the public key. The above command will print the public key. 
+The above command requires ssh-agent, if you're using Windows see
+[flux boostrap github](https://toolkit.fluxcd.io/guides/installation/#github-and-github-enterprise) documentation.
 
+At bootstrap, Flux generates an SSH key and prints the public key.
 In order to sync your cluster state with git you need to copy the public key and create a deploy key with write 
 access on your GitHub repository. On GitHub go to _Settings > Deploy keys_ click on _Add deploy key_, 
 check _Allow write access_, paste the Flux public key and click _Add key_.
 
-When Flux has write access to your repository it will do the following:
+When Flux has access to your repository it will do the following:
 
 * installs the Istio operator
 * waits for Istio control plane to be ready
-* installs Flagger CRDs and Helm Releases
+* installs Flagger, Prometheus and Grafana
 * creates the Istio public gateway
 * creates the `prod` namespace
 * creates the load tester deployment
 * creates the frontend deployment and canary
 * creates the backend deployment and canary
 
+When bootstrapping a cluster with Istio, it is important to define the apply order. For the applications
+pods to be injected with Istio sidecar, the Istio control plane must be up and running before the apps.
+
+With Flux v2 you can specify the execution order by defining dependencies between objects.
+For example, in [clusters/my-cluster/apps.yaml](https://github.com/stefanprodan/gitops-istio/blob/main/clusters/my-cluster/apps.yaml)
+we tell Flux that the `apps` reconciliation depends on the `istio-system` one:
+
+```yaml
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta1
+kind: Kustomization
+metadata:
+  name: apps
+  namespace: flux-system
+spec:
+  interval: 30m0s
+  dependsOn:
+    - name: istio-system
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./apps
+```
+
+Watch Flux installing Istio first, then the demo apps:
+
+```bash
+watch flux get kustomizations
+```
+
+You can tail the Flux reconciliation logs with:
+
+```bash
+flux logs --all-namespaces --follow --tail=10
+```
+
+## Istio customizations and upgrades
+
 ![Flux Istio Operator](https://raw.githubusercontent.com/fluxcd/helm-operator-get-started/master/diagrams/flux-istio-operator.png)
 
 You can customize the Istio installation with the `IstioOperator` resource located at
-[istio/control-plane.yaml](https://github.com/stefanprodan/gitops-istio/blob/master/istio/control-plane.yaml):
+[istio/system/profile.yaml](https://github.com/stefanprodan/gitops-istio/blob/main/istio/system/profile.yaml):
 
 ```yaml
 apiVersion: install.istio.io/v1alpha1
 kind: IstioOperator
 metadata:
-  namespace: istio-system
   name: istio-default
+  namespace: istio-system
 spec:
-  profile: default
+  profile: demo
   components:
     pilot:
       k8s:
@@ -86,10 +155,13 @@ spec:
 
 After modifying the Istio settings, you can push the change to git and Flux will apply it on the cluster. 
 The Istio operator will reconfigure the Istio control plane according to your changes.
-It can take a couple of minutes for Flux to sync and apply the changes, to speed up the apply
-you can use `fluxctl sync` to trigger a git sync.
 
-### Workloads bootstrap
+When a new Istio version is available, the [`update-istio` GitHub Action workflow](https://github.com/stefanprodan/gitops-istio/blob/main/.github/workflows/update-istio.yaml)
+will open a pull request with the manifest updates needed for upgrading Istio Operator.
+The new Istio version is tested on Kubernetes Kind by the [`e2e` GitHub Action workflow](https://github.com/stefanprodan/gitops-istio/blob/main/.github/workflows/e2e.yaml)
+and when the PR is merged into the main branch, Flux will upgrade Istio in-cluster.
+
+## Application bootstrap
 
 When Flux syncs the Git repository with your cluster, it creates the frontend/backend deployment, HPA and a canary object.
 Flagger uses the canary definition to create a series of objects: Kubernetes deployments, 
@@ -134,7 +206,7 @@ kubectl -n istio-system get svc istio-ingressgateway -ojson | jq .status.loadBal
 
 Open a browser and navigate to the ingress address, you'll see the frontend UI.
 
-### Canary releases
+## Canary releases
 
 Flagger implements a control loop that gradually shifts traffic to the canary while measuring key performance indicators
 like HTTP requests success rate, requests average duration and pod health.
@@ -146,26 +218,43 @@ A canary analysis is triggered by changes in any of the following objects:
 
 For workloads that are not receiving constant traffic Flagger can be configured with a webhook, 
 that when called, will start a load test for the target workload. The canary configuration can be found
-at [prod/backend/canary.yaml](https://github.com/stefanprodan/gitops-istio/blob/master/prod/backend/canary.yaml).
+at [apps/backend/canary.yaml](https://github.com/stefanprodan/gitops-istio/blob/main/apps/backend/canary.yaml).
 
 ![Flagger Canary Release](https://raw.githubusercontent.com/weaveworks/flagger/master/docs/diagrams/flagger-canary-steps.png)
 
-Trigger a canary deployment for the backend app by updating the container image:
+Pull the changes from GitHub:
 
-```bash
-$ export FLUX_FORWARD_NAMESPACE=flux
-
-$ fluxctl release --workload=prod:deployment/backend \
---update-image=stefanprodan/podinfo:3.1.1
-
-Submitting release ...
-WORKLOAD                 STATUS   UPDATES
-prod:deployment/backend  success  backend: stefanprodan/podinfo:3.1.0 -> 3.1.1
-Commit pushed:	ccb4ae7
-Commit applied:	ccb4ae7
+```sh
+git pull origin main
 ```
 
-Flagger detects that the deployment revision changed and starts a new rollout:
+To trigger a canary deployment for the backend app, bump the container image:
+
+```bash
+yq e '.images[0].newTag="5.0.1"' -i ./apps/backend/kustomization.yaml
+```
+
+Commit and push changes:
+
+```bash
+git add -A && \
+git commit -m "backend 5.0.1" && \
+git push origin main
+```
+
+Tell Flux to pull the changes or wait one minute for Flux to detect the changes on its own:
+
+```bash
+flux reconcile source git flux-system
+```
+
+Watch Flux reconciling your cluster to the latest commit:
+
+```bash
+watch flux get kustomizations
+```
+
+After a couple of seconds, Flagger detects that the deployment revision changed and starts a new rollout:
 
 ```bash
 $ kubectl -n prod describe canary backend
@@ -195,7 +284,7 @@ http://localhost:3000/d/flagger-istio/istio-canary?refresh=10s&orgId=1&var-names
 
 Note that if new changes are applied to the deployment during the canary analysis, Flagger will restart the analysis phase.
 
-### A/B testing
+## A/B testing
 
 Besides weighted routing, Flagger can be configured to route traffic to the canary based on HTTP match conditions. 
 In an A/B testing scenario, you'll be using HTTP headers or cookies to target a certain segment of your users. 
@@ -222,13 +311,18 @@ You can enable A/B testing by specifying the HTTP match conditions and the numbe
 ```
 
 The above configuration will run an analysis for two minutes targeting Firefox users and those that 
-have an insider cookie. The frontend configuration can be found at `prod/frontend/canary.yaml`.
+have an insider cookie. The frontend configuration can be found at `apps/frontend/canary.yaml`.
 
 Trigger a deployment by updating the frontend container image:
 
 ```bash
-$ fluxctl release --workload=prod:deployment/frontend \
---update-image=stefanprodan/podinfo:3.1.1
+yq e '.images[0].newTag="5.0.1"' -i ./apps/frontend/kustomization.yaml
+
+git add -A && \
+git commit -m "frontend 5.0.1" && \
+git push origin main
+
+flux reconcile source git flux-system
 ```
 
 Flagger detects that the deployment revision changed and starts the A/B testing:
@@ -257,10 +351,10 @@ prod        frontend  Progressing   100
 prod        backend   Succeeded     0
 ```
 
-### Rollback based on Istio metrics
+## Rollback based on Istio metrics
 
 Flagger makes use of the metrics provided by Istio telemetry to validate the canary workload.
-The frontend app [analysis](https://github.com/stefanprodan/gitops-istio/blob/master/prod/frontend/canary.yaml)
+The frontend app [analysis](https://github.com/stefanprodan/gitops-istio/blob/main/apps/frontend/canary.yaml)
 defines two metric checks: 
 
 ```yaml
@@ -282,7 +376,7 @@ defines two metric checks:
 ```
 
 The Prometheus queries used for checking the error rate and latency are located at
-[flagger/istio-metrics.yaml](https://github.com/stefanprodan/gitops-istio/blob/master/flagger/istio-metrics.yaml).
+[flagger-metrics.yaml](https://github.com/stefanprodan/gitops-istio/blob/main/istio/gateway/flagger-metrics.yaml).
 
 During the canary analysis you can generate HTTP 500 errors and high latency to test Flagger's rollback.
 
@@ -319,44 +413,16 @@ You can extend the analysis with custom metric checks targeting
 [Datadog](https://docs.flagger.app/usage/metrics#datadog) and
 [Amazon CloudWatch](https://docs.flagger.app/usage/metrics#amazon-cloudwatch).
 
-### Alerting
+For configuring alerting of the canary analysis for Slack, MS Teams, Discord or Rocket see the
+[docs](https://docs.flagger.app/usage/alerting#canary-configuration).
 
-Flagger can be configured to send Slack notifications.
-You can enable alerting by adding the Slack settings to Flagger's Helm Release:
-
-```yaml
-apiVersion: helm.fluxcd.io/v1
-kind: HelmRelease
-metadata:
-  name: flagger
-  namespace: istio-system
-spec:
-  values:
-    slack:
-      user: flagger
-      channel: general
-      url: https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK
-```
-
-Once configured with a Slack incoming **webhook**, Flagger will post messages when a canary deployment 
-has been initialised, when a new revision has been detected and if the canary analysis failed or succeeded.
-
-![Slack Notifications](https://raw.githubusercontent.com/weaveworks/flagger/master/docs/screens/slack-canary-notifications.png)
-
-A canary deployment will be rolled back if the progress deadline exceeded or if the analysis reached the 
-maximum number of failed checks:
-
-![Slack Notifications](https://raw.githubusercontent.com/weaveworks/flagger/master/docs/screens/slack-canary-failed.png)
-
-For configuring alerting at canary level for Slack, MS Teams, Discord or Rocket see the [docs](https://docs.flagger.app/usage/alerting#canary-configuration).
-
-### Getting Help
+## Getting Help
 
 If you have any questions about progressive delivery:
 
-* Invite yourself to the [Weave community slack](https://slack.weave.works/)
-  and join the [#flux](https://weave-community.slack.com/messages/flux/) and [#flagger](https://weave-community.slack.com/messages/flagger/) channel.
-* Join the [Weave User Group](https://www.meetup.com/pro/Weave/) and get invited to online talks,
-  hands-on training and meetups in your area.
+* Invite yourself to the [CNCF community slack](https://slack.cncf.io/)
+  and join the [#flux](https://cloud-native.slack.com/messages/flux/) and [#flagger](https://cloud-native.slack.com/messages/flagger/) channel.
+* Check out the [Flux talks section](https://fluxcd.io/community/#talks) and to see a list of online talks,
+  hands-on training and meetups.
 
 Your feedback is always welcome!
