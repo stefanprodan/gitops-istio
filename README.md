@@ -11,7 +11,7 @@ Progressive Delivery using Kubernetes and Istio.
 
 GitOps is a way to do Continuous Delivery, it works by using Git as a source of truth
 for declarative infrastructure and workloads.
-For Kubernetes this means using `git push` instead of `kubectl create/apply` or `helm install/upgrade`.
+For Kubernetes this means using `git push` instead of `kubectl apply/delete` or `helm install/upgrade`.
 
 In this workshop you'll be using GitHub to host the config repository and Flux as the GitOps delivery solution.
 
@@ -28,7 +28,7 @@ In this workshop you'll be using Flagger and Prometheus to automate Canary Relea
 ## Prerequisites
 
 You'll need a Kubernetes cluster **v1.16** or newer with `LoadBalancer` support. 
-For testing purposes you can use Minikube with four CPUs and 4GB of memory. 
+For testing purposes you can use Minikube with 2 CPUs and 4GB of memory. 
 
 Install the `flux` CLI and `yq` with Homebrew:
 
@@ -45,6 +45,12 @@ Verify that your cluster satisfies the prerequisites with:
 flux check --pre
 ```
 
+Install `jq` and `yq` with Homebrew:
+
+```bash
+brew install jq yq
+```
+
 Fork this repository and clone it:
 
 ```bash
@@ -54,7 +60,12 @@ cd gitops-istio
 
 ## Cluster bootstrap
 
-Install Flux by specifying your fork URL:
+With `flux bootstrap` command you can install Flux on a Kubernetes cluster
+and configure it to manage itself from a Git repository.
+If the Flux components are present on the cluster,
+the bootstrap command will perform an upgrade if needed.
+
+Bootstrap Flux by specifying your GitHub repository fork URL:
 
 ```bash
 flux bootstrap git \
@@ -62,6 +73,9 @@ flux bootstrap git \
   --branch=main \
   --path=clusters/my-cluster
 ```
+
+The above command requires ssh-agent, if you're using Windows see
+[flux boostrap github](https://toolkit.fluxcd.io/guides/installation/#github-and-github-enterprise) documentation.
 
 At bootstrap, Flux generates an SSH key and prints the public key.
 In order to sync your cluster state with git you need to copy the public key and create a deploy key with write 
@@ -100,7 +114,6 @@ spec:
     kind: GitRepository
     name: flux-system
   path: ./apps
-  prune: true
 ```
 
 Watch Flux installing Istio first, then the demo apps:
@@ -109,7 +122,13 @@ Watch Flux installing Istio first, then the demo apps:
 watch flux get kustomizations
 ```
 
-## Istio customization
+You can tail the Flux reconciliation logs with:
+
+```bash
+flux logs --all-namespaces --follow --tail=10
+```
+
+## Istio customizations and upgrades
 
 ![Flux Istio Operator](https://raw.githubusercontent.com/fluxcd/helm-operator-get-started/master/diagrams/flux-istio-operator.png)
 
@@ -135,6 +154,11 @@ spec:
 
 After modifying the Istio settings, you can push the change to git and Flux will apply it on the cluster. 
 The Istio operator will reconfigure the Istio control plane according to your changes.
+
+When a new Istio version is available, the [`update-istio` GitHub Action workflow](https://github.com/stefanprodan/gitops-istio/blob/main/.github/workflows/update-istio.yaml)
+will open a pull request with the manifest updates needed for upgrading Istio Operator.
+The new Istio version is tested on Kubernetes Kind by the [`e2e` GitHub Action workflow](https://github.com/stefanprodan/gitops-istio/blob/main/.github/workflows/e2e.yaml)
+and when the PR is merged into the main branch, Flux will upgrade Istio in-cluster.
 
 ## Application bootstrap
 
