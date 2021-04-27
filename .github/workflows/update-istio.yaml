@@ -17,6 +17,8 @@ jobs:
           ref: master
       - name: Setup Helm
         uses: ./.github/actions/helm
+        with:
+          version: 3.5.3
       - name: Check for updates
         id: check
         run: |

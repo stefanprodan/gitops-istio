@@ -1,9 +1,24 @@
-name: 'helm'
-description: 'A GitHub Action to run helm commands'
-author: 'Stefan Prodan'
+name: Setup Helm
+description: A GitHub Action for running Helm commands
+author: Stefan Prodan
 branding:
-  icon: 'command'
-  color: 'blue'
+  color: blue
+  icon: command
+inputs:
+  version:
+    description: "Helm version"
+    required: true
 runs:
-  using: 'docker'
-  image: 'Dockerfile'
+  using: composite
+  steps:
+    - name: "Install Helm"
+      shell: bash
+      run: |
+        VERSION=${{ inputs.version }}
+        cd tmp
+        curl -sL https://get.helm.sh/helm-v${VERSION}-linux-amd64.tar.gz | tar xz
+        sudo cp ./linux-amd64/helm /usr/local/bin
+    - name: "Verify correct installation of binary"
+      shell: bash
+      run: |
+        helm version
