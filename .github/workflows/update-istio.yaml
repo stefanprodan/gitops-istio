@@ -5,7 +5,7 @@ on:
     - cron:  '0 8 */1 * *'
   push:
     branches:
-      - 'master'
+      - 'main'
 
 jobs:
   check-istio:
@@ -14,7 +14,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          ref: master
+          ref: main
       - name: Setup Helm
         uses: ./.github/actions/helm
         with:

@@ -1,0 +1,51 @@
+name: e2e
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ '*' ]
+    tags-ignore: [ '*' ]
+
+jobs:
+  kubernetes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Flux
+        uses: fluxcd/flux2/action@main
+      - name: Setup Kubernetes
+        uses: engineerd/setup-kind@v0.5.0
+        with:
+          version: "v0.10.0"
+          image: "kindest/node:v1.20.2"
+      - name: Install Flux in Kubernetes Kind
+        run: flux install
+      - name: Setup cluster reconciliation
+        run: |
+          flux create source git flux-system \
+          --url=${{ github.event.repository.html_url }} \
+          --branch=${GITHUB_REF#refs/heads/}
+          flux create kustomization flux-system \
+          --source=flux-system \
+          --path=./clusters/my-cluster
+      - name: Verify cluster reconciliation
+        run: |
+          kubectl -n flux-system wait kustomization/istio-operator --for=condition=ready --timeout=1m
+          kubectl -n flux-system wait kustomization/istio-system --for=condition=ready --timeout=1m
+          kubectl -n flux-system wait kustomization/apps --for=condition=ready --timeout=1m
+          kubectl -n prod wait canary/frontend --for=condition=promoted
+          kubectl -n prod wait canary/backend --for=condition=promoted
+      - name: List canaries
+        run: |
+          kubectl -n prod get canaries
+      - name: Debug failure
+        if: failure()
+        run: |
+          kubectl -n flux-system get all
+          kubectl -n flux-system logs deploy/source-controller
+          kubectl -n flux-system logs deploy/kustomize-controller
+          kubectl -n flux-system logs deploy/helm-controller
+          kubectl -n istio-operator get all
+          kubectl -n istio-system get all
+          kubectl -n prod get all
