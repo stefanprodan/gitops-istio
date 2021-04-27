@@ -13,10 +13,10 @@ Components:
     * manages the traffic flows between microservices, enforcing access policies and aggregating telemetry data
 * **Prometheus** monitoring system  
     * time series database that collects and stores the service mesh metrics
-* **Flux** GitOps Toolkit
+* **Flux v2** continuous delivery
     * syncs YAMLs and Helm charts between git and clusters
     * scans container registries and deploys new images
-* **Flagger** progressive delivery operator
+* **Flagger** progressive delivery
     * automates the release process using Istio routing for traffic shifting and Prometheus metrics for canary analysis
 
 ### Prerequisites
@@ -48,8 +48,7 @@ flux bootstrap git \
   --path=clusters/my-cluster
 ```
 
-At bootstrap, Flux generates an SSH key and logs the public key. The above command will print the public key. 
-
+At bootstrap, Flux generates an SSH key and prints the public key.
 In order to sync your cluster state with git you need to copy the public key and create a deploy key with write 
 access on your GitHub repository. On GitHub go to _Settings > Deploy keys_ click on _Add deploy key_, 
 check _Allow write access_, paste the Flux public key and click _Add key_.
@@ -65,6 +64,38 @@ When Flux has access to your repository it will do the following:
 * creates the frontend deployment and canary
 * creates the backend deployment and canary
 
+When bootstrapping a cluster with Istio, it is important to define the apply order. For the applications
+pods to be injected with Istio sidecar, the Istio control plane must be up and running before the apps.
+
+With Flux v2 you can specify the execution order by defining dependencies between objects.
+For example, in [clusters/my-cluster/apps.yaml](https://github.com/stefanprodan/gitops-istio/blob/main/clusters/my-cluster/apps.yaml)
+we tell Flux that the `apps` reconciliation depends on the `istio` one:
+
+```yaml
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta1
+kind: Kustomization
+metadata:
+  name: apps
+  namespace: flux-system
+spec:
+  interval: 30m0s
+  dependsOn:
+    - name: istio-system
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./apps
+  prune: true
+```
+
+Watch Flux reconciling Istio, then the demo apps:
+
+```bash
+watch flux get kustomizations
+```
+
+### Istio customization
+
 ![Flux Istio Operator](https://raw.githubusercontent.com/fluxcd/helm-operator-get-started/master/diagrams/flux-istio-operator.png)
 
 You can customize the Istio installation with the `IstioOperator` resource located at
@@ -74,8 +105,8 @@ You can customize the Istio installation with the `IstioOperator` resource locat
 apiVersion: install.istio.io/v1alpha1
 kind: IstioOperator
 metadata:
-  namespace: istio-system
   name: istio-default
+  namespace: istio-system
 spec:
   profile: demo
   components:
@@ -90,7 +121,7 @@ spec:
 After modifying the Istio settings, you can push the change to git and Flux will apply it on the cluster. 
 The Istio operator will reconfigure the Istio control plane according to your changes.
 
-### Workloads bootstrap
+### App bootstrap
 
 When Flux syncs the Git repository with your cluster, it creates the frontend/backend deployment, HPA and a canary object.
 Flagger uses the canary definition to create a series of objects: Kubernetes deployments, 
@@ -171,10 +202,16 @@ git commit -m "backend 5.0.1" && \
 git push origin main
 ```
 
-Tell Flux to pull the changes or wait one minute for Flux to detect the changes:
+Tell Flux to pull the changes or wait one minute for Flux to detect the changes on its own:
 
 ```bash
-flux reconcile kustomization flux-system --with-source
+flux reconcile source git flux-system
+```
+
+Watch Flux reconciling your cluster to the latest commit:
+
+```bash
+watch flux get kustomizations
 ```
 
 After a couple of seconds, Flagger detects that the deployment revision changed and starts a new rollout:
@@ -277,7 +314,7 @@ prod        backend   Succeeded     0
 ### Rollback based on Istio metrics
 
 Flagger makes use of the metrics provided by Istio telemetry to validate the canary workload.
-The frontend app [analysis](https://github.com/stefanprodan/gitops-istio/blob/master/prod/frontend/canary.yaml)
+The frontend app [analysis](https://github.com/stefanprodan/gitops-istio/blob/main/apps/frontend/canary.yaml)
 defines two metric checks: 
 
 ```yaml
@@ -336,44 +373,16 @@ You can extend the analysis with custom metric checks targeting
 [Datadog](https://docs.flagger.app/usage/metrics#datadog) and
 [Amazon CloudWatch](https://docs.flagger.app/usage/metrics#amazon-cloudwatch).
 
-### Alerting
-
-Flagger can be configured to send Slack notifications.
-You can enable alerting by adding the Slack settings to Flagger's Helm Release:
-
-```yaml
-apiVersion: helm.fluxcd.io/v1
-kind: HelmRelease
-metadata:
-  name: flagger
-  namespace: istio-system
-spec:
-  values:
-    slack:
-      user: flagger
-      channel: general
-      url: https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK
-```
-
-Once configured with a Slack incoming **webhook**, Flagger will post messages when a canary deployment 
-has been initialised, when a new revision has been detected and if the canary analysis failed or succeeded.
-
-![Slack Notifications](https://raw.githubusercontent.com/weaveworks/flagger/master/docs/screens/slack-canary-notifications.png)
-
-A canary deployment will be rolled back if the progress deadline exceeded or if the analysis reached the 
-maximum number of failed checks:
-
-![Slack Notifications](https://raw.githubusercontent.com/weaveworks/flagger/master/docs/screens/slack-canary-failed.png)
-
-For configuring alerting at canary level for Slack, MS Teams, Discord or Rocket see the [docs](https://docs.flagger.app/usage/alerting#canary-configuration).
+For configuring alerting of the canary analysis for Slack, MS Teams, Discord or Rocket see the
+[docs](https://docs.flagger.app/usage/alerting#canary-configuration).
 
 ### Getting Help
 
 If you have any questions about progressive delivery:
 
-* Invite yourself to the [Weave community slack](https://slack.weave.works/)
-  and join the [#flux](https://weave-community.slack.com/messages/flux/) and [#flagger](https://weave-community.slack.com/messages/flagger/) channel.
-* Join the [Weave User Group](https://www.meetup.com/pro/Weave/) and get invited to online talks,
-  hands-on training and meetups in your area.
+* Invite yourself to the [CNCF community slack](https://slack.cncf.io/)
+  and join the [#flux](https://cloud-native.slack.com/messages/flux/) and [#flagger](https://cloud-native.slack.com/messages/flagger/) channel.
+* Check out the [Flux talks section](https://fluxcd.io/community/#talks) and to see a list of online talks,
+  hands-on training and meetups.
 
 Your feedback is always welcome!
