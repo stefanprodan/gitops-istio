@@ -3,7 +3,7 @@
 [![e2e](https://github.com/stefanprodan/gitops-istio/workflows/e2e/badge.svg)](https://github.com/stefanprodan/gitops-istio/actions)
 [![license](https://img.shields.io/github/license/stefanprodan/gitops-istio.svg)](https://github.com/stefanprodan/gitops-istio/blob/main/LICENSE)
 
-This is a self-paced workshop where you will get hands-on experience with GitOps and
+This is a guide where you will get hands-on experience with GitOps and
 Progressive Delivery using Kubernetes and Istio.
 
 ## Introduction
@@ -14,7 +14,7 @@ GitOps is a way to do Continuous Delivery, it works by using Git as a source of 
 for declarative infrastructure and workloads.
 For Kubernetes this means using `git push` instead of `kubectl apply/delete` or `helm install/upgrade`.
 
-In this workshop you'll be using GitHub to host the config repository and Flux as the GitOps delivery solution.
+In this workshop you'll be using GitHub to host the config repository and [Flux](https://fluxcd.io) as the GitOps delivery solution.
 
 ### What is Progressive Delivery?
 
@@ -22,7 +22,7 @@ Progressive delivery is an umbrella term for advanced deployment patterns like c
 Progressive delivery techniques are used to reduce the risk of introducing a new software version in production
 by giving app developers and SRE teams a fine-grained control over the blast radius.
 
-In this workshop you'll be using Flagger and Prometheus to automate Canary Releases and A/B Testing for your applications.
+In this workshop you'll be using [Flagger](https://flagger.app) and Prometheus to automate Canary Releases and A/B Testing for your applications.
 
 ![Progressive Delivery GitOps Pipeline](https://raw.githubusercontent.com/fluxcd/flagger/main/docs/diagrams/flagger-gitops-istio.png)
 
@@ -37,7 +37,7 @@ Install the `flux` CLI with Homebrew:
 brew install fluxcd/tap/flux
 ```
 
-Binaries for macOS, Windows and Linux AMD64/ARM are available
+Binaries for macOS AMD64/ARM64, Linux AMD64/ARM and Windows are available
 to download on the [flux2 release page](https://github.com/fluxcd/flux2/releases).
 
 Verify that your cluster satisfies the prerequisites with:
@@ -70,6 +70,7 @@ Bootstrap Flux by specifying your GitHub repository fork URL:
 
 ```bash
 flux bootstrap git \
+  --author-email=<YOUR-EMAIL> \
   --url=ssh://git@github.com/<YOUR-USERNAME>/gitops-istio \
   --branch=main \
   --path=clusters/my-cluster
