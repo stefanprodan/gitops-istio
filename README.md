@@ -24,7 +24,7 @@ by giving app developers and SRE teams a fine-grained control over the blast rad
 
 In this workshop you'll be using Flagger and Prometheus to automate Canary Releases and A/B Testing for your applications.
 
-![Progressive Delivery GitOps Pipeline](https://raw.githubusercontent.com/weaveworks/flagger/master/docs/diagrams/flagger-gitops-istio.png)
+![Progressive Delivery GitOps Pipeline](https://raw.githubusercontent.com/fluxcd/flagger/main/docs/diagrams/flagger-gitops-istio.png)
 
 ## Prerequisites
 
@@ -158,7 +158,7 @@ The Istio operator will reconfigure the Istio control plane according to your ch
 
 When a new Istio version is available, the [`update-istio` GitHub Action workflow](https://github.com/stefanprodan/gitops-istio/blob/main/.github/workflows/update-istio.yaml)
 will open a pull request with the manifest updates needed for upgrading Istio Operator.
-The new Istio version is tested on Kubernetes Kind by the [`e2e` GitHub Action workflow](https://github.com/stefanprodan/gitops-istio/blob/main/.github/workflows/e2e.yaml)
+The new Istio version is tested on Kubernetes Kind by the [`e2e` workflow](https://github.com/stefanprodan/gitops-istio/blob/main/.github/workflows/e2e.yaml)
 and when the PR is merged into the main branch, Flux will upgrade Istio in-cluster.
 
 ## Application bootstrap
