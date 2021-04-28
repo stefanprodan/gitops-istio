@@ -20,13 +20,9 @@ spec:
   service:
     # container port
     port: 9898
-    trafficPolicy:
-      tls:
-        # use ISTIO_MUTUAL when mTLS is enabled
-        mode: DISABLE
     # Istio gateways (optional)
     gateways:
-    - public-gateway.istio-system.svc.cluster.local
+    - istio-system/public-gateway
     # Istio virtual service host names (optional)
     hosts:
     - "*"
