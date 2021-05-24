@@ -77,7 +77,7 @@ flux bootstrap git \
 ```
 
 The above command requires ssh-agent, if you're using Windows see
-[flux boostrap github](https://fluxcd.io/docs/guides/installation/#github-and-github-enterprise) documentation.
+[flux bootstrap github](https://fluxcd.io/docs/guides/installation/#github-and-github-enterprise) documentation.
 
 At bootstrap, Flux generates an SSH key and prints the public key.
 In order to sync your cluster state with git you need to copy the public key and create a deploy key with write 
