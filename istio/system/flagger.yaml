@@ -28,6 +28,7 @@ spec:
   values:
     meshProvider: istio
     metricsServer: http://prometheus.istio-system:9090
+    includeLabelPrefix: app
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
