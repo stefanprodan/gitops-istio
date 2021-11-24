@@ -1,0 +1,33 @@
+name: analyze-istio
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+
+jobs:
+  check-istio:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Get Istioctl
+        run: |
+          ISTIO_VERSION=$(yq eval '. | select(.kind == "Deployment") | .spec.template.spec.containers[0].image | split(":") | .[1]' ./istio/operator/manifests.yaml)
+          echo "ISTIO_VERSION=$ISTIO_VERSION" >> $GITHUB_ENV
+          # downloadIstio will now retrieve the currently installed binary, instead of latest
+          echo "Downloading Istio (v${ISTIO_VERSION})"
+          curl -sL https://istio.io/downloadIstio | ISTIO_VERSION=$ISTIO_VERSION sh -
+      - name: Istioctl Analyze
+        run: |
+          # this command will exit(1) if an error is found in any yaml
+          # istio/operator/manifests.yaml contains an empty yaml doc, which
+          # throws off analyze, so pass it in separately
+          MANIFESTS=$(yq eval '. | select(. | has("kind"))' ./istio/operator/manifests.yaml)
+
+          ISTIO_VERSION=${{ env.ISTIO_VERSION }}
+
+          ./istio-${ISTIO_VERSION}/bin/istioctl analyze -A --use-kube=false \
+            --failure-threshold ERROR $(find . -not -path "*/istio-$ISTIO_VERSION/*" \
+            -not -path "*/.git*/*" -not -path "*/clusters/*" -name "*.yaml" \
+            -not -path "*/istio/operator/manifests.yaml" -type f) -<<<"$MANIFESTS"
