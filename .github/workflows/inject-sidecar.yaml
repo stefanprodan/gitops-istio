@@ -1,0 +1,60 @@
+name: inject-sidecar
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+
+jobs:
+  check-istio:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Get Istioctl
+        run: |
+          ISTIO_VERSION=$(yq eval '. | select(.kind == "Deployment") | .spec.template.spec.containers[0].image | split(":") | .[1]' ./istio/operator/manifests.yaml)
+          echo "ISTIO_VERSION=$ISTIO_VERSION" >> $GITHUB_ENV
+          # downloadIstio will now retrieve the currently installed binary, instead of latest
+          echo "Downloading Istio (v${ISTIO_VERSION})"
+          curl -sL https://istio.io/downloadIstio | ISTIO_VERSION=$ISTIO_VERSION sh -
+      - name: Inject Sidecar
+        id: inject
+        run: |
+          export ISTIO_VERSION=${{ env.ISTIO_VERSION }}
+
+          # hydrate isto manifest into configmap files
+          manifests=$(./istio-${ISTIO_VERSION}/bin/istioctl manifest generate \
+            -f istio/system/profile.yaml)
+          echo $manifests | yq e '. | select(.kind == "ConfigMap" and .metadata.name =="istio-sidecar-injector") | .data.config' - > injector.yaml
+          echo $manifests | yq e '. | select(.kind == "ConfigMap" and .metadata.name =="istio-sidecar-injector") | .data.values' - > values.yaml
+          echo $manifests | yq e '. | select(.kind == "ConfigMap" and .metadata.name =="istio") | .data.mesh' - > injector.yaml
+
+          inplace_inject() {
+            ./istio-${ISTIO_VERSION}/bin/istioctl kube-inject \
+                               --injectConfigFile injector.yaml \
+                                --meshConfigFile mesh.yaml \
+                                --valuesFile values.yaml \
+                               -f $1 -o $1.tmp
+            mv $1.tmp $1
+          }
+
+          export -f inplace_inject
+
+          find . -not -path "*/istio-$ISTIO_VERSION/*" \
+                 -not -path "*/.git*/*" -not -path "*/clusters/*" -name "*.yaml" \
+                 -not -path "*/istio/operator/manifests.yaml" -name "*deployment.yaml" \
+                 -print0 | xargs -0 -I{} bash -c "inplace_inject {}"
+
+          if [[ $(git diff --stat) != '' ]]; then
+            echo ::set-output name=version::${ISTIO_VERSION}
+          fi
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v3
+        if: steps.inject.outputs.version
+        with:
+          commit-message: Update Sidecars to ${{ env.ISTIO_VERSION }}
+          title: Update Istio sidecar
+          body: |
+            Istio sidecar v${{ env.ISTIO_VERSION }}
+          branch: update-istio
