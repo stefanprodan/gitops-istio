@@ -41,6 +41,12 @@ jobs:
 
           export -f inplace_inject
 
+          # kube-inject sets this annotation to prevent injecting twice, unclear why
+          find . -not -path "*/istio-$ISTIO_VERSION/*" \
+                           -not -path "*/.git*/*" -not -path "*/clusters/*" -name "*.yaml" \
+                           -not -path "*/istio/operator/manifests.yaml" -name "*deployment.yaml" \
+                           -print0 | xargs -0 -I{} yq -i e 'del(.spec.template.metadata.annotations."sidecar.istio.io/status")' {}
+
           find . -not -path "*/istio-$ISTIO_VERSION/*" \
                  -not -path "*/.git*/*" -not -path "*/clusters/*" -name "*.yaml" \
                  -not -path "*/istio/operator/manifests.yaml" -name "*deployment.yaml" \
