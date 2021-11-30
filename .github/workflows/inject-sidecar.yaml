@@ -47,6 +47,7 @@ jobs:
                  -print0 | xargs -0 -I{} bash -c "inplace_inject {}"
 
           rm manifests.yaml injector.yaml values.yaml mesh.yaml
+          rm -rf ./istio-${ISTIO_VERSION}
           if [[ $(git diff --stat) != '' ]]; then
             echo ::set-output name=version::${ISTIO_VERSION}
           fi
@@ -58,4 +59,4 @@ jobs:
           title: Update Istio sidecar
           body: |
             Istio sidecar v${{ env.ISTIO_VERSION }}
-          branch: update-istio
+          branch: update-sidecar
