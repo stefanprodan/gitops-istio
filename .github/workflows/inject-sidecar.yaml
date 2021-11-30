@@ -24,11 +24,11 @@ jobs:
           export ISTIO_VERSION=${{ env.ISTIO_VERSION }}
 
           # hydrate isto manifest into configmap files
-          manifests=$(./istio-${ISTIO_VERSION}/bin/istioctl manifest generate \
-            -f istio/system/profile.yaml)
-          echo $manifests | yq e '. | select(.kind == "ConfigMap" and .metadata.name =="istio-sidecar-injector") | .data.config' - > injector.yaml
-          echo $manifests | yq e '. | select(.kind == "ConfigMap" and .metadata.name =="istio-sidecar-injector") | .data.values' - > values.yaml
-          echo $manifests | yq e '. | select(.kind == "ConfigMap" and .metadata.name =="istio") | .data.mesh' - > injector.yaml
+          ./istio-${ISTIO_VERSION}/bin/istioctl manifest generate \
+            -f istio/system/profile.yaml > manifests.yaml
+          cat manifests.yaml | yq e '. | select(.kind == "ConfigMap" and .metadata.name =="istio-sidecar-injector") | .data.config' - > injector.yaml
+          cat manifests.yaml | yq e '. | select(.kind == "ConfigMap" and .metadata.name =="istio-sidecar-injector") | .data.values' - > values.yaml
+          cat manifests.yaml | yq e '. | select(.kind == "ConfigMap" and .metadata.name =="istio") | .data.mesh' - > mesh.yaml
 
           inplace_inject() {
             ./istio-${ISTIO_VERSION}/bin/istioctl kube-inject \
@@ -46,6 +46,7 @@ jobs:
                  -not -path "*/istio/operator/manifests.yaml" -name "*deployment.yaml" \
                  -print0 | xargs -0 -I{} bash -c "inplace_inject {}"
 
+          rm manifests.yaml injector.yaml values.yaml mesh.yaml
           if [[ $(git diff --stat) != '' ]]; then
             echo ::set-output name=version::${ISTIO_VERSION}
           fi
