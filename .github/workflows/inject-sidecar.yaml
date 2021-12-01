@@ -30,27 +30,22 @@ jobs:
           cat manifests.yaml | yq e '. | select(.kind == "ConfigMap" and .metadata.name =="istio-sidecar-injector") | .data.values' - > values.yaml
           cat manifests.yaml | yq e '. | select(.kind == "ConfigMap" and .metadata.name =="istio") | .data.mesh' - > mesh.yaml
 
-          inplace_inject() {
+          inject() {
+            NAME=`echo "1" | cut -d'.' -f1`
+            EXTENSION=`echo "1" | cut -d'.' -f2`
             ./istio-${ISTIO_VERSION}/bin/istioctl kube-inject \
                                --injectConfigFile injector.yaml \
                                 --meshConfigFile mesh.yaml \
                                 --valuesFile values.yaml \
-                               -f $1 -o $1.tmp
-            mv $1.tmp $1
+                               -f $1 -o $NAME.gen.$EXTENSION
           }
 
-          export -f inplace_inject
-
-          # kube-inject sets this annotation to prevent injecting twice, unclear why
-          find . -not -path "*/istio-$ISTIO_VERSION/*" \
-                           -not -path "*/.git*/*" -not -path "*/clusters/*" -name "*.yaml" \
-                           -not -path "*/istio/operator/manifests.yaml" -name "*deployment.yaml" \
-                           -print0 | xargs -0 -I{} yq -i e 'del(.spec.template.metadata.annotations."sidecar.istio.io/status")' {}
+          export -f inject
 
           find . -not -path "*/istio-$ISTIO_VERSION/*" \
                  -not -path "*/.git*/*" -not -path "*/clusters/*" -name "*.yaml" \
                  -not -path "*/istio/operator/manifests.yaml" -name "*deployment.yaml" \
-                 -print0 | xargs -0 -I{} bash -c "inplace_inject {}"
+                 -print0 | xargs -0 -I{} bash -c "inject {}"
 
           rm manifests.yaml injector.yaml values.yaml mesh.yaml
           rm -rf ./istio-${ISTIO_VERSION}
