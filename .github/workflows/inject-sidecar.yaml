@@ -31,8 +31,10 @@ jobs:
           cat manifests.yaml | yq e '. | select(.kind == "ConfigMap" and .metadata.name =="istio") | .data.mesh' - > mesh.yaml
 
           inject() {
-            NAME=`echo "1" | cut -d'.' -f1`
-            EXTENSION=`echo "1" | cut -d'.' -f2`
+            NAME="${1%.*}"
+            echo "name =$NAME"
+            EXTENSION="${1##*.}"
+            echo "ext =$EXTENSION"
             ./istio-${ISTIO_VERSION}/bin/istioctl kube-inject \
                                --injectConfigFile injector.yaml \
                                 --meshConfigFile mesh.yaml \
