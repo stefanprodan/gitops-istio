@@ -130,7 +130,7 @@ spec:
           value: cluster.local
         - name: ISTIO_PROMETHEUS_ANNOTATIONS
           value: '{"scrape":"true","path":"","port":""}'
-        image: docker.io/istio/proxyv2:1.11.4
+        image: docker.io/istio/proxyv2:1.12.0
         name: istio-proxy
         ports:
         - containerPort: 15090
@@ -191,7 +191,7 @@ spec:
         - '*'
         - -d
         - 15090,15021,15020
-        image: docker.io/istio/proxyv2:1.11.4
+        image: docker.io/istio/proxyv2:1.12.0
         name: istio-init
         resources:
           limits:
