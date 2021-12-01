@@ -1,40 +1,34 @@
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  creationTimestamp: null
-  labels:
-    app: flagger-loadtester
   name: flagger-loadtester
   namespace: prod
+  labels:
+    app: flagger-loadtester
 spec:
   selector:
     matchLabels:
       app: flagger-loadtester
-  strategy: {}
   template:
     metadata:
-      annotations:
-        kubectl.kubernetes.io/default-container: loadtester
-        kubectl.kubernetes.io/default-logs-container: loadtester
-        prometheus.io/path: /stats/prometheus
-        prometheus.io/port: "15020"
-        prometheus.io/scrape: "true"
-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
-      creationTimestamp: null
       labels:
         app: flagger-loadtester
-        security.istio.io/tlsMode: istio
-        service.istio.io/canonical-name: flagger-loadtester
-        service.istio.io/canonical-revision: latest
+      annotations:
+        prometheus.io/scrape: "true"
     spec:
       containers:
-      - command:
+      - name: loadtester
+        image: weaveworks/flagger-loadtester:0.13.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http
+          containerPort: 8080
+        command:
         - ./loadtester
         - -port=8080
         - -log-level=info
         - -timeout=1h
-        image: weaveworks/flagger-loadtester:0.13.0
-        imagePullPolicy: IfNotPresent
         livenessProbe:
           exec:
             command:
@@ -45,10 +39,6 @@ spec:
             - --spider
             - http://localhost:8080/healthz
           timeoutSeconds: 5
-        name: loadtester
-        ports:
-        - containerPort: 8080
-          name: http
         readinessProbe:
           exec:
             command:
@@ -61,184 +51,11 @@ spec:
           timeoutSeconds: 5
         resources:
           limits:
-            cpu: "1"
-            memory: 512Mi
+            memory: "512Mi"
+            cpu: "1000m"
           requests:
-            cpu: 10m
-            memory: 32Mi
+            memory: "32Mi"
+            cpu: "10m"
         securityContext:
           readOnlyRootFilesystem: true
           runAsUser: 10001
-      - args:
-        - proxy
-        - sidecar
-        - --domain
-        - $(POD_NAMESPACE).svc.cluster.local
-        - --proxyLogLevel=warning
-        - --proxyComponentLogLevel=misc:error
-        - --log_output_level=default:info
-        - --concurrency
-        - "2"
-        env:
-        - name: JWT_POLICY
-          value: third-party-jwt
-        - name: PILOT_CERT_PROVIDER
-          value: istiod
-        - name: CA_ADDR
-          value: istiod.istio-system.svc:15012
-        - name: POD_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.name
-        - name: POD_NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
-        - name: INSTANCE_IP
-          valueFrom:
-            fieldRef:
-              fieldPath: status.podIP
-        - name: SERVICE_ACCOUNT
-          valueFrom:
-            fieldRef:
-              fieldPath: spec.serviceAccountName
-        - name: HOST_IP
-          valueFrom:
-            fieldRef:
-              fieldPath: status.hostIP
-        - name: PROXY_CONFIG
-          value: |
-            {}
-        - name: ISTIO_META_POD_PORTS
-          value: |-
-            [
-                {"name":"http","containerPort":8080}
-            ]
-        - name: ISTIO_META_APP_CONTAINERS
-          value: loadtester
-        - name: ISTIO_META_CLUSTER_ID
-          value: Kubernetes
-        - name: ISTIO_META_INTERCEPTION_MODE
-          value: REDIRECT
-        - name: ISTIO_META_WORKLOAD_NAME
-          value: flagger-loadtester
-        - name: ISTIO_META_OWNER
-          value: kubernetes://apis/apps/v1/namespaces/prod/deployments/flagger-loadtester
-        - name: ISTIO_META_MESH_ID
-          value: cluster.local
-        - name: TRUST_DOMAIN
-          value: cluster.local
-        - name: ISTIO_PROMETHEUS_ANNOTATIONS
-          value: '{"scrape":"true","path":"","port":""}'
-        image: docker.io/istio/proxyv2:1.11.4
-        name: istio-proxy
-        ports:
-        - containerPort: 15090
-          name: http-envoy-prom
-          protocol: TCP
-        readinessProbe:
-          failureThreshold: 30
-          httpGet:
-            path: /healthz/ready
-            port: 15021
-          initialDelaySeconds: 1
-          periodSeconds: 2
-          timeoutSeconds: 3
-        resources:
-          limits:
-            cpu: "2"
-            memory: 1Gi
-          requests:
-            cpu: 10m
-            memory: 40Mi
-        securityContext:
-          allowPrivilegeEscalation: false
-          capabilities:
-            drop:
-            - ALL
-          privileged: false
-          readOnlyRootFilesystem: true
-          runAsGroup: 1337
-          runAsNonRoot: true
-          runAsUser: 1337
-        volumeMounts:
-        - mountPath: /var/run/secrets/istio
-          name: istiod-ca-cert
-        - mountPath: /var/lib/istio/data
-          name: istio-data
-        - mountPath: /etc/istio/proxy
-          name: istio-envoy
-        - mountPath: /var/run/secrets/tokens
-          name: istio-token
-        - mountPath: /etc/istio/pod
-          name: istio-podinfo
-      initContainers:
-      - args:
-        - istio-iptables
-        - -p
-        - "15001"
-        - -z
-        - "15006"
-        - -u
-        - "1337"
-        - -m
-        - REDIRECT
-        - -i
-        - '*'
-        - -x
-        - ""
-        - -b
-        - '*'
-        - -d
-        - 15090,15021,15020
-        image: docker.io/istio/proxyv2:1.11.4
-        name: istio-init
-        resources:
-          limits:
-            cpu: "2"
-            memory: 1Gi
-          requests:
-            cpu: 10m
-            memory: 40Mi
-        securityContext:
-          allowPrivilegeEscalation: false
-          capabilities:
-            add:
-            - NET_ADMIN
-            - NET_RAW
-            drop:
-            - ALL
-          privileged: false
-          readOnlyRootFilesystem: false
-          runAsGroup: 0
-          runAsNonRoot: false
-          runAsUser: 0
-      securityContext:
-        fsGroup: 1337
-      volumes:
-      - emptyDir:
-          medium: Memory
-        name: istio-envoy
-      - emptyDir: {}
-        name: istio-data
-      - downwardAPI:
-          items:
-          - fieldRef:
-              fieldPath: metadata.labels
-            path: labels
-          - fieldRef:
-              fieldPath: metadata.annotations
-            path: annotations
-        name: istio-podinfo
-      - name: istio-token
-        projected:
-          sources:
-          - serviceAccountToken:
-              audience: istio-ca
-              expirationSeconds: 43200
-              path: istio-token
-      - configMap:
-          name: istio-ca-root-cert
-        name: istiod-ca-cert
-status: {}
----
