@@ -6,7 +6,7 @@ metadata:
   name: flux-system
   namespace: flux-system
 spec:
-  ignore: "*/deployment.yaml"
+  ignore: "**/deployment.yaml"
   interval: 1m0s
   ref:
     branch: main
