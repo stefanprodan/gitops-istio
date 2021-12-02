@@ -29,6 +29,7 @@ jobs:
 
           echo "Build manifests for ${ISTIO_VER} in dir ${ISTIO_DIR}"
           helm template --include-crds \
+          --namespace istio-operator \
           ${ISTIO_DIR}/manifests/charts/istio-operator/ > ./istio/operator/manifests.yaml
 
           cat ${ISTIO_DIR}/samples/addons/prometheus.yaml > ./istio/system/prometheus.yaml
@@ -42,6 +43,7 @@ jobs:
         uses: peter-evans/create-pull-request@v3
         if: steps.check.outputs.version
         with:
+          token: ${{ secrets.GH_ADMIN_TOKEN }}
           commit-message: Update Istio to ${{ steps.check.outputs.version }}
           title: Update Istio to ${{ steps.check.outputs.version }}
           body: |
