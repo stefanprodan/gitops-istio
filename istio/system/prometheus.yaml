@@ -413,7 +413,7 @@ spec:
         release: prometheus
         chart: prometheus-14.6.1
         heritage: Helm
-
+        
         sidecar.istio.io/inject: "false"
     spec:
       enableServiceLinks: true
