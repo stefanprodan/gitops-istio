@@ -17,36 +17,36 @@ spec:
     plural: istiooperators
     singular: istiooperator
     shortNames:
-      - iop
-      - io
+    - iop
+    - io
   scope: Namespaced
   versions:
-    - additionalPrinterColumns:
-        - description: Istio control plane revision
-          jsonPath: .spec.revision
-          name: Revision
-          type: string
-        - description: IOP current state
-          jsonPath: .status.status
-          name: Status
-          type: string
-        - description: 'CreationTimestamp is a timestamp representing the server time
+  - additionalPrinterColumns:
+    - description: Istio control plane revision
+      jsonPath: .spec.revision
+      name: Revision
+      type: string
+    - description: IOP current state
+      jsonPath: .status.status
+      name: Status
+      type: string
+    - description: 'CreationTimestamp is a timestamp representing the server time
         when this object was created. It is not guaranteed to be set in happens-before
         order across separate operations. Clients may not set this value. It is represented
         in RFC3339 form and is in UTC. Populated by the system. Read-only. Null for
         lists. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#metadata'
-          jsonPath: .metadata.creationTimestamp
-          name: Age
-          type: date
-      name: v1alpha1
-      subresources:
-        status: {}
-      schema:
-        openAPIV3Schema:
-          type: object
-          x-kubernetes-preserve-unknown-fields: true
-      served: true
-      storage: true
+      jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    subresources:
+      status: {}
+    schema:
+      openAPIV3Schema:
+        type: object
+        x-kubernetes-preserve-unknown-fields: true
+    served: true
+    storage: true
 ---
 
 ---
@@ -64,115 +64,115 @@ metadata:
   creationTimestamp: null
   name: istio-operator
 rules:
-  # istio groups
-  - apiGroups:
-      - authentication.istio.io
-    resources:
-      - '*'
-    verbs:
-      - '*'
-  - apiGroups:
-      - config.istio.io
-    resources:
-      - '*'
-    verbs:
-      - '*'
-  - apiGroups:
-      - install.istio.io
-    resources:
-      - '*'
-    verbs:
-      - '*'
-  - apiGroups:
-      - networking.istio.io
-    resources:
-      - '*'
-    verbs:
-      - '*'
-  - apiGroups:
-      - security.istio.io
-    resources:
-      - '*'
-    verbs:
-      - '*'
-  # k8s groups
-  - apiGroups:
-      - admissionregistration.k8s.io
-    resources:
-      - mutatingwebhookconfigurations
-      - validatingwebhookconfigurations
-    verbs:
-      - '*'
-  - apiGroups:
-      - apiextensions.k8s.io
-    resources:
-      - customresourcedefinitions.apiextensions.k8s.io
-      - customresourcedefinitions
-    verbs:
-      - '*'
-  - apiGroups:
-      - apps
-      - extensions
-    resources:
-      - daemonsets
-      - deployments
-      - deployments/finalizers
-      - replicasets
-    verbs:
-      - '*'
-  - apiGroups:
-      - autoscaling
-    resources:
-      - horizontalpodautoscalers
-    verbs:
-      - '*'
-  - apiGroups:
-      - monitoring.coreos.com
-    resources:
-      - servicemonitors
-    verbs:
-      - get
-      - create
-      - update
-  - apiGroups:
-      - policy
-    resources:
-      - poddisruptionbudgets
-    verbs:
-      - '*'
-  - apiGroups:
-      - rbac.authorization.k8s.io
-    resources:
-      - clusterrolebindings
-      - clusterroles
-      - roles
-      - rolebindings
-    verbs:
-      - '*'
-  - apiGroups:
-      - coordination.k8s.io
-    resources:
-      - leases
-    verbs:
-      - get
-      - create
-      - update
-  - apiGroups:
-      - ""
-    resources:
-      - configmaps
-      - endpoints
-      - events
-      - namespaces
-      - pods
-      - pods/proxy
-      - pods/portforward
-      - persistentvolumeclaims
-      - secrets
-      - services
-      - serviceaccounts
-    verbs:
-      - '*'
+# istio groups
+- apiGroups:
+  - authentication.istio.io
+  resources:
+  - '*'
+  verbs:
+  - '*'
+- apiGroups:
+  - config.istio.io
+  resources:
+  - '*'
+  verbs:
+  - '*'
+- apiGroups:
+  - install.istio.io
+  resources:
+  - '*'
+  verbs:
+  - '*'
+- apiGroups:
+  - networking.istio.io
+  resources:
+  - '*'
+  verbs:
+  - '*'
+- apiGroups:
+  - security.istio.io
+  resources:
+  - '*'
+  verbs:
+  - '*'
+# k8s groups
+- apiGroups:
+  - admissionregistration.k8s.io
+  resources:
+  - mutatingwebhookconfigurations
+  - validatingwebhookconfigurations
+  verbs:
+  - '*'
+- apiGroups:
+  - apiextensions.k8s.io
+  resources:
+  - customresourcedefinitions.apiextensions.k8s.io
+  - customresourcedefinitions
+  verbs:
+  - '*'
+- apiGroups:
+  - apps
+  - extensions
+  resources:
+  - daemonsets
+  - deployments
+  - deployments/finalizers
+  - replicasets
+  verbs:
+  - '*'
+- apiGroups:
+  - autoscaling
+  resources:
+  - horizontalpodautoscalers
+  verbs:
+  - '*'
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - servicemonitors
+  verbs:
+  - get
+  - create
+  - update
+- apiGroups:
+  - policy
+  resources:
+  - poddisruptionbudgets
+  verbs:
+  - '*'
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - clusterrolebindings
+  - clusterroles
+  - roles
+  - rolebindings
+  verbs:
+  - '*'
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - get
+  - create
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  - endpoints
+  - events
+  - namespaces
+  - pods
+  - pods/proxy
+  - pods/portforward
+  - persistentvolumeclaims
+  - secrets
+  - services
+  - serviceaccounts
+  verbs:
+  - '*'
 ---
 # Source: istio-operator/templates/clusterrole_binding.yaml
 kind: ClusterRoleBinding
@@ -180,9 +180,9 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: istio-operator
 subjects:
-  - kind: ServiceAccount
-    name: istio-operator
-    namespace: istio-operator
+- kind: ServiceAccount
+  name: istio-operator
+  namespace: istio-operator
 roleRef:
   kind: ClusterRole
   name: istio-operator
@@ -198,10 +198,10 @@ metadata:
   name: istio-operator
 spec:
   ports:
-    - name: http-metrics
-      port: 8383
-      targetPort: 8383
-      protocol: TCP
+  - name: http-metrics
+    port: 8383
+    targetPort: 8383
+    protocol: TCP
   selector:
     name: istio-operator
 ---
@@ -226,13 +226,13 @@ spec:
         - name: istio-operator
           image: docker.io/istio/operator:1.12.0
           command:
-            - operator
-            - server
+          - operator
+          - server
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
               drop:
-                - ALL
+              - ALL
             privileged: false
             readOnlyRootFilesystem: true
             runAsGroup: 1337
