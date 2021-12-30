@@ -5,6 +5,8 @@ metadata:
   namespace: prod
   labels:
     app: frontend
+  annotations:
+    foo: bar
 spec:
   minReadySeconds: 5
   revisionHistoryLimit: 5
