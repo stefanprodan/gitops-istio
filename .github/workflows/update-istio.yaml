@@ -23,6 +23,9 @@ jobs:
       - name: Check for updates
         id: check
         run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          
           curl -sL https://istio.io/downloadIstio | sh -
           ISTIO_DIR=$(find . -name 'istio-*' -type d -maxdepth 1 -print | head -n1)
           ISTIO_VER=${ISTIO_DIR##./istio-}
@@ -44,6 +47,8 @@ jobs:
         if: steps.check.outputs.version
         with:
           token: ${{ secrets.GH_ADMIN_TOKEN }}
+          committer: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
+          author: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
           commit-message: Update Istio to ${{ steps.check.outputs.version }}
           title: Update Istio to ${{ steps.check.outputs.version }}
           body: |
