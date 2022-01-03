@@ -44,6 +44,8 @@ jobs:
         if: steps.check.outputs.version
         with:
           token: ${{ secrets.GH_ADMIN_TOKEN }}
+          committer: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
+          author: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
           commit-message: Update Istio to ${{ steps.check.outputs.version }}
           title: Update Istio to ${{ steps.check.outputs.version }}
           body: |
