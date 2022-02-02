@@ -1,7 +1,11 @@
 name: wftest
 
+on:
+  workflow_dispatch:
+  
 jobs:
   checksemver:
+    runs-on: ubuntu-latest
     steps:
     - name: foo
       uses: wistefan/get-releases-by-semver@master
