@@ -5,8 +5,8 @@ const semver = require('semver')
 try {
   const octokit = github.getOctokit("");
   const releases = octokit.rest.repos.listReleases({
-    "istio",
-    "istio",
+    owner: 'istio',
+    repo: 'istio',
   });
   const relmap = new Map();
   releases.forEach( rel => relmap.set(rel.tag_name, rel));
