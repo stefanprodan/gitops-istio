@@ -1,0 +1,11 @@
+name: wftest
+
+jobs:
+  checksemver:
+    steps:
+    - name: foo
+      uses: wistefan/get-releases-by-semver@master
+      with:
+        include: "MINOR"
+        repository: istio/istio
+        minMinor: "2"
