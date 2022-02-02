@@ -13,3 +13,5 @@ jobs:
       uses: ./.github/actions/get-istioctl
       with:
         myToken: ${{ secrets.GITHUB_TOKEN }}
+    - name: Get the output time
+      run: echo "The output was ${{ steps.hello.doit.foo }}"
