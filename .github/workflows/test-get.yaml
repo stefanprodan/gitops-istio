@@ -1,4 +1,4 @@
-name: analyze-istio
+name: test-get
 
 on:
   workflow_dispatch:
