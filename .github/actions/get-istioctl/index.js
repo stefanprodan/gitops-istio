@@ -3,7 +3,8 @@ const github = require('@actions/github');
 const semver = require('semver')
 
 try {
-  const octokit = github.getOctokit("");
+  const myToken = core.getInput('myToken');
+  const octokit = github.getOctokit(myToken);
   const releases = octokit.rest.repos.listReleases({
     owner: 'istio',
     repo: 'istio',
