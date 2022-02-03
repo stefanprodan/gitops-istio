@@ -10,6 +10,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
     - name: doit
+      id: doit
       uses: ./.github/actions/get-istioctl
       with:
         myToken: ${{ secrets.GITHUB_TOKEN }}
