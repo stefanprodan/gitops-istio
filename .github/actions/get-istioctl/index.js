@@ -13,7 +13,7 @@ try {
         const relmap = new Map();
         result.data.forEach( rel => relmap.set(rel.tag_name, rel));
         max = semver.maxSatisfying(Array.from(relmap.keys()), "v1")
-        core.setOutput("version", max.minor);
+        core.setOutput("foo", max.minor);
         core.setOutput("major", max.major)
         core.setOutput("minor", max.minor)
         core.setOutput("patch", max.patch)
