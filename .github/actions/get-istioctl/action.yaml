@@ -12,3 +12,10 @@ outputs:
     description: "foo"
   version:
     description: "version"
+  major:
+    description: "foo"
+  minor:
+    description: "foo"
+  patch:
+    description: "foo"
+
