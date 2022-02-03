@@ -11,4 +11,4 @@ outputs:
   foo:
     description: "foo"
   version:
-    description: "verison"
+    description: "version"
