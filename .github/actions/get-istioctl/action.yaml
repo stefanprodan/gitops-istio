@@ -7,3 +7,6 @@ inputs:
   myToken:
     description: "foo"
     required: true
+outputs:
+  foo:
+    description: "foo"
