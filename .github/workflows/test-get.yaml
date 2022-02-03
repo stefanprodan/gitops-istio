@@ -15,4 +15,4 @@ jobs:
       with:
         myToken: ${{ secrets.GITHUB_TOKEN }}
     - name: Get the output time
-      run: echo "The output was ${{ steps.doit.outputs.foo }}"
+      run: echo "Selected version ${{ steps.doit.outputs.version }}"
