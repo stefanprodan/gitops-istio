@@ -5,7 +5,7 @@ const semver = require('semver')
 try {
   const myToken = core.getInput('myToken');
   const octokit = github.getOctokit(myToken);
-  const { data: releases } = octokit.rest.repos.listReleases({
+  const { data: releases } = await octokit.rest.repos.listReleases({
     owner: 'istio',
     repo: 'istio',
   });
