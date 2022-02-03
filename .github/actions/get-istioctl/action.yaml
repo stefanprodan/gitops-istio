@@ -10,3 +10,5 @@ inputs:
 outputs:
   foo:
     description: "foo"
+  version:
+    description: "verison"
