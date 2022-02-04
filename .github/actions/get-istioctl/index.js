@@ -9,7 +9,7 @@ try {
     owner: 'istio',
     repo: 'istio',
   }).then(result => {
-        core.setOutput("foo", result.data)
+        // core.setOutput("foo", result.data)
         const relmap = new Map();
         result.data.forEach( rel => relmap.set(rel.tag_name, rel));
         max = semver.parse(semver.maxSatisfying(Array.from(relmap.keys()), "v1"));
