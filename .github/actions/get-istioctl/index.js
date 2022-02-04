@@ -12,13 +12,13 @@ try {
         core.setOutput("foo", result.data)
         const relmap = new Map();
         result.data.forEach( rel => relmap.set(rel.tag_name, rel));
-        max = semver.maxSatisfying(Array.from(relmap.keys()), "v1")
-        core.setOutput("foo", max.minor);
-        core.setOutput("major", max.major)
-        core.setOutput("minor", max.minor)
-        core.setOutput("patch", max.patch)
+        max = semver.parse(semver.maxSatisfying(Array.from(relmap.keys()), "v1"));
+        core.setOutput("version", max.version);
+        core.setOutput("major", max.major);
+        core.setOutput("minor", max.minor);
+        core.setOutput("patch", max.patch);
       })
-      .catch(error => core.setFailed(error.message))
+      .catch(error => core.setFailed(error.message));
 } catch (error) {
-  core.setFailed(error.message)
+  core.setFailed(error.message);
 }
