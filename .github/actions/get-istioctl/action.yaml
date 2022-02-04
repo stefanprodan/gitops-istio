@@ -4,9 +4,18 @@ runs:
   using: 'node16'
   main: 'index.js'
 inputs:
-  myToken:
-    description: "foo"
+  version:
+    description: "a semver matching expression, indicating which istio version
+    is of interest.  the max satisfying version will be returned."
     required: true
+  os:
+    required: false
+    default: local
+    description: "the target operating system, must be one of linux, win, osx"
+  arch:
+    required: false
+    default: local
+    description: "the required architecture for binaries.  currently supports amd64, arm64, armv7"
 outputs:
   foo:
     description: "foo"
@@ -18,4 +27,8 @@ outputs:
     description: "foo"
   patch:
     description: "foo"
+  istioctl-url:
+    description: the url for downloading the specified istioctl
+  istio-url:
+    description: the url for downloading the specified istio binaries
 

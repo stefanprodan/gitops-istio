@@ -15,7 +15,8 @@ try {
   }).then(result => {
     const relmap = new Map();
     result.data.forEach( rel => relmap.set(rel.tag_name, rel));
-    max = semver.parse(semver.maxSatisfying(Array.from(relmap.keys()), "v1"));
+    expr = core.getInput("version")
+    max = semver.parse(semver.maxSatisfying(Array.from(relmap.keys()), expr));
     core.setOutput("version", max.version);
     core.setOutput("major", max.major);
     core.setOutput("minor", max.minor);
@@ -41,6 +42,7 @@ try {
     if (osvar === "local") {
       switch(os.platform()) {
         case 'darwin':
+        case 'osx':
           osvar = "osx";
           extension = '.tar.gz'
           if (arch !== '-arm64') {
