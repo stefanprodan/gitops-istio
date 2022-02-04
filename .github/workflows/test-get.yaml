@@ -13,8 +13,9 @@ jobs:
       id: doit
       uses: ./.github/actions/get-istioctl
       with:
-        myToken: ${{ secrets.GITHUB_TOKEN }}
+        version: "1.11"
     - name: Get the output time
       run: |
         echo "Selected version ${{ steps.doit.outputs.version }}"
         echo "patch version ${{ steps.doit.outputs.patch }}"
+        echo "download link ${{ steps.doit.outputs.istioctl-url }}"
