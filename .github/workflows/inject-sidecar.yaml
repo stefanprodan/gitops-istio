@@ -64,7 +64,7 @@ jobs:
         if: steps.inject.outputs.version
         with:
           commit-message: Update Sidecars to ${{ env.ISTIO_VERSION }}
-          title: Update Istio sidecar
+          title: Update Istio sidecar ${{ env.ISTIO_VERSION }}
           body: |
             Istio sidecar v${{ env.ISTIO_VERSION }}
-          branch: update-sidecar
+          branch: update-sidecar-${{ env.ISTIO_VERSION }}
