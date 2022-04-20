@@ -11,7 +11,7 @@ jobs:
       uses: actions/checkout@v2
     - name: doit
       id: doit
-      uses: ./.github/actions/get-istioctl
+      uses: istio/get-istioctl
       with:
         version: "1.11"
     - name: Get the output time
