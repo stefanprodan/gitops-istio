@@ -37,7 +37,7 @@ jobs:
             echo "name =$NAME"
             EXTENSION="${1##*.}"
             echo "ext =$EXTENSION"
-            ./istio-${ISTIO_VERSION}/bin/istioctl kube-inject \
+            ./istioctl kube-inject \
                                --injectConfigFile injector.yaml \
                                 --meshConfigFile mesh.yaml \
                                 --valuesFile values.yaml \
