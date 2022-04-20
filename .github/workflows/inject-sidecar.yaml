@@ -55,7 +55,7 @@ jobs:
                  -print0 | xargs -0 -I{} bash -c "inject {}"
 
           rm manifests.yaml injector.yaml values.yaml mesh.yaml
-          rm -rf ./istio-${ISTIO_VERSION}
+          rm -f ./istioctl ./istioctl.tar.gz
           if [[ $(git diff --stat) != '' ]]; then
             echo ::set-output name=version::${ISTIO_VERSION}
           fi
