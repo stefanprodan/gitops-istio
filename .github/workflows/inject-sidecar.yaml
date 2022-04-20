@@ -10,11 +10,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: get istio version
+        id: get-istio-version
+        run: |
+          ISTIO_VERSION=$(yq eval '. | select(.kind == "Deployment") | .spec.template.spec.containers[0].image | split(":") | .[1]' ./istio/operator/manifests.yaml)
+          echo "ISTIO_VERSION=$ISTIO_VERSION" >> $GITHUB_ENV
       - name: get istioctl uri
         id: get-istioctl
         uses: istio/get-istioctl@7c64a7f9985dfecbca647011af56b2b82ee1121f
         with:
-          version: "1.*"
+          version: ${{ env.ISTIO_VERSION }}
       - name: Get Istioctl
         run: |
           curl -o istioctl.tar.gz -fsLO ${{ steps.get-istioctl.outputs.istioctl-url }}
@@ -23,8 +28,6 @@ jobs:
       - name: Inject Sidecar
         id: inject
         run: |
-          export ISTIO_VERSION=${{ env.ISTIO_VERSION }}
-
           # hydrate isto manifest into configmap files
           ./istioctl manifest generate \
             -f istio/system/profile.yaml > manifests.yaml
