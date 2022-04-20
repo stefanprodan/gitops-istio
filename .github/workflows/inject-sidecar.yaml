@@ -17,7 +17,7 @@ jobs:
           version: "1.*"
       - name: Get Istioctl
         run: |
-          curl -o istioctl.tar.gz -fsLO ${{ steps.doit.outputs.istioctl-url }}
+          curl -o istioctl.tar.gz -fsLO ${{ steps.get-istioctl.outputs.istioctl-url }}
           tar -xzf istioctl.tar.gz
           ./istioctl version --remote=false
       - name: Inject Sidecar
