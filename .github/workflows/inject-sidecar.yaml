@@ -12,7 +12,7 @@ jobs:
         uses: actions/checkout@v2
       - name: get istioctl uri
         id: get-istioctl
-        uses: istio/get-istioctl
+        uses: istio/get-istioctl@7c64a7f
         with:
           version: "1.*"
       - name: Get Istioctl
