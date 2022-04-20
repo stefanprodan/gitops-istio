@@ -1,5 +1,5 @@
 name: 'get-istioctl'
-description: 'Greet someone and record the time'
+description: 'Get a specific version of istioctl using semver match'
 runs:
   using: 'node16'
   main: 'index.js'
@@ -11,22 +11,20 @@ inputs:
   os:
     required: false
     default: local
-    description: "the target operating system, must be one of linux, win, osx"
+    description: "the target operating system, must be one of linux, win, osx, local (default)"
   arch:
     required: false
     default: local
-    description: "the required architecture for binaries.  currently supports amd64, arm64, armv7"
+    description: "the required architecture for binaries.  currently supports amd64, arm64, armv7, and local (default)"
 outputs:
-  foo:
-    description: "foo"
   version:
-    description: "version"
+    description: "the selected istioctl version"
   major:
-    description: "foo"
+    description: "the major portion of the selected istioctl version"
   minor:
-    description: "foo"
+    description: "the minor portion of the selected istioctl version"
   patch:
-    description: "foo"
+    description: "the patch portion of the selected istioctl version"
   istioctl-url:
     description: the url for downloading the specified istioctl
   istio-url:
