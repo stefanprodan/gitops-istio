@@ -57,6 +57,7 @@ jobs:
       - name: Debug failure
         if: failure()
         run: |
+          kubectl -n flux-system get kustomizations
           kubectl -n flux-system get all
           kubectl -n flux-system logs deploy/source-controller
           kubectl -n flux-system logs deploy/kustomize-controller
