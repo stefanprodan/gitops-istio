@@ -3,6 +3,8 @@ name: inject-sidecar
 on:
   workflow_dispatch:
   push:
+    branches:
+    - main
 
 jobs:
   check-istio:
