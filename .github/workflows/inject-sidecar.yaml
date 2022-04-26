@@ -63,6 +63,9 @@ jobs:
         uses: peter-evans/create-pull-request@v3
         if: steps.inject.outputs.version
         with:
+          token: ${{ secrets.GH_ADMIN_TOKEN }}
+          committer: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
+          author: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
           commit-message: Update Sidecars to ${{ env.ISTIO_VERSION }}
           title: Update Istio sidecar ${{ env.ISTIO_VERSION }}
           body: |

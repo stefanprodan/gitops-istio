@@ -42,10 +42,14 @@ jobs:
           if [[ $(git diff --stat) != '' ]]; then
             echo ::set-output name=version::${ISTIO_VER}
           fi
+
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
         if: steps.check.outputs.version
         with:
+          token: ${{ secrets.GH_ADMIN_TOKEN }}
+          committer: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
+          author: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
           commit-message: Update Istio to ${{ steps.check.outputs.version }}
           title: Update Istio to ${{ steps.check.outputs.version }}
           body: |
