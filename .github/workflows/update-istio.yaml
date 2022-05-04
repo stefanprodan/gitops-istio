@@ -16,31 +16,21 @@ jobs:
         uses: actions/checkout@v2
         with:
           ref: main
-      - name: Setup Helm
-        uses: ./.github/actions/helm
+      - name: get istioctl latest version
+        id: get-istioctl
+        uses: istio/get-istioctl@e9b2b82bc1cecf150ec6aee77ceee8c256f4faf4
         with:
-          version: 3.5.3
+          version: "1.*"
       - name: Check for updates
         id: check
+        env:
+          ISTIO_VERSION: ${{ steps.get-istioctl.outputs.istioctl-url }}
         run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          
-          curl -sL https://istio.io/downloadIstio | sh -
-          ISTIO_DIR=$(find . -name 'istio-*' -type d -maxdepth 1 -print | head -n1)
-          ISTIO_VER=${ISTIO_DIR##./istio-}
-
-          echo "Build manifests for ${ISTIO_VER} in dir ${ISTIO_DIR}"
-          helm template --include-crds \
-          --namespace istio-operator \
-          ${ISTIO_DIR}/manifests/charts/istio-operator/ > ./istio/operator/manifests.yaml
-
-          cat ${ISTIO_DIR}/samples/addons/prometheus.yaml > ./istio/system/prometheus.yaml
-
-          rm -rf ${ISTIO_DIR}
+          echo "Found Istio version ${ISTIO_VERSION}"
+          yq eval '.data.version=env(ISTIO_VERSION)' -i ./clusters/my-cluster/istio-version.yaml
 
           if [[ $(git diff --stat) != '' ]]; then
-            echo ::set-output name=version::${ISTIO_VER}
+            echo ::set-output name=version::${ISTIO_VERSION}
           fi
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
@@ -52,5 +42,5 @@ jobs:
           commit-message: Update Istio to ${{ steps.check.outputs.version }}
           title: Update Istio to ${{ steps.check.outputs.version }}
           body: |
-            Istio operator v${{ steps.check.outputs.version }}
+            Istio v${{ steps.check.outputs.version }}
           branch: update-istio
