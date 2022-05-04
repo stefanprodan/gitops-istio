@@ -1,4 +1,4 @@
-apiVersion: source.toolkit.fluxcd.io/v1beta1
+apiVersion: source.toolkit.fluxcd.io/v1beta2
 kind: HelmRepository
 metadata:
   name: flagger
@@ -13,6 +13,11 @@ metadata:
   name: flagger
   namespace: istio-system
 spec:
+  releaseName: flagger
+  install:
+    crds: Create
+  upgrade:
+    crds: CreateReplace
   chart:
     spec:
       chart: flagger
@@ -20,29 +25,7 @@ spec:
         kind: HelmRepository
         name: flagger
   interval: 1h0m0s
-  releaseName: flagger
-  install:
-    crds: Create
-  upgrade:
-    crds: CreateReplace
   values:
     meshProvider: istio
-    metricsServer: http://prometheus.istio-system:9090
-    includeLabelPrefix: app
----
-apiVersion: helm.toolkit.fluxcd.io/v2beta1
-kind: HelmRelease
-metadata:
-  name: flagger-grafana
-  namespace: istio-system
-spec:
-  chart:
-    spec:
-      chart: grafana
-      sourceRef:
-        kind: HelmRepository
-        name: flagger
-  interval: 1h0m0s
-  releaseName: flagger-grafana
-  values:
-    url: http://prometheus.istio-system:9090
+    prometheus:
+      install: true

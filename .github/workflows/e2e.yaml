@@ -20,6 +20,9 @@ jobs:
           version: v0.11.1
       - name: Install Flux in Kubernetes Kind
         run: flux install
+      - name: Set Istio Gateway service type
+        run: |
+          kubectl -n flux-system create cm istio-version --from-literal=service=NodePort
       - name: Setup cluster reconciliation
         run: |
           flux create source git flux-system \
@@ -30,8 +33,8 @@ jobs:
           --path=./clusters/my-cluster
       - name: Verify cluster reconciliation
         run: |
-          kubectl -n flux-system wait kustomization/istio-operator --for=condition=ready --timeout=2m
           kubectl -n flux-system wait kustomization/istio-system --for=condition=ready --timeout=2m
+          kubectl -n flux-system wait kustomization/istio-gateway --for=condition=ready --timeout=2m
           kubectl -n flux-system wait kustomization/apps --for=condition=ready --timeout=2m
           kubectl -n prod wait canary/frontend --for=condition=promoted --timeout=1m
           kubectl -n prod rollout status deployment/frontend --timeout=1m
