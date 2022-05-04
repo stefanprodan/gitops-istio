@@ -29,3 +29,20 @@ spec:
     meshProvider: istio
     prometheus:
       install: true
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: flagger-grafana
+  namespace: istio-system
+spec:
+  chart:
+    spec:
+      chart: grafana
+      sourceRef:
+        kind: HelmRepository
+        name: flagger
+  interval: 1h0m0s
+  releaseName: flagger-grafana
+  values:
+    url: http://flagger-prometheus.istio-system:9090
