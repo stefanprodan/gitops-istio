@@ -40,6 +40,9 @@ jobs:
           kubectl -n prod rollout status deployment/frontend --timeout=1m
           kubectl -n prod wait canary/backend --for=condition=promoted --timeout=1m
           kubectl -n prod rollout status deployment/backend --timeout=1m
+      - name: List Flux managed objects
+        run: |
+          flux tree ks flux-system
       - name: Test canary release
         run: |
           kubectl -n prod set image deployment/backend backend=stefanprodan/podinfo:5.0.1
