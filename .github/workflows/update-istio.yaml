@@ -27,7 +27,7 @@ jobs:
       - name: Set the Istio version
         id: check
         env:
-          ISTIO_VERSION: ${{ steps.get-istioctl.outputs.istioctl-url }}
+          ISTIO_VERSION: ${{ steps.get-istioctl.outputs.version }}
         run: |
           echo "Found Istio version ${ISTIO_VERSION}"
           yq eval '.data.version=env(ISTIO_VERSION)' -i ./clusters/my-cluster/istio-version.yaml
