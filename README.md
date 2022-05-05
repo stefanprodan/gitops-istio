@@ -97,7 +97,7 @@ For example, in [clusters/my-cluster/apps.yaml](https://github.com/stefanprodan/
 we tell Flux that the `apps` reconciliation depends on the `istio-system` one:
 
 ```yaml
-apiVersion: kustomize.toolkit.fluxcd.io/v1beta1
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
 kind: Kustomization
 metadata:
   name: apps
@@ -139,16 +139,16 @@ You can customize the Istio installation using the Flux `HelmReleases` located a
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
-  name: istiod
+  name: istio-gateway
   namespace: istio-system
 spec:
-  # chart spec omitted 
+  dependsOn:
+    - name: istio-base
+    - name: istiod
+  # source: https://github.com/istio/istio/blob/master/manifests/charts/gateway/values.yaml
   values:
-    pilot:
-      resources:
-        requests:
-          cpu: 100m
-          memory: 128Mi
+    autoscaling:
+      enabled: true
 ```
 
 After modifying the Helm release values, you can push the change to git and Flux
@@ -237,14 +237,14 @@ git pull origin main
 To trigger a canary deployment for the backend app, bump the container image:
 
 ```bash
-yq e '.images[0].newTag="5.0.1"' -i ./apps/backend/kustomization.yaml
+yq e '.images[0].newTag="6.1.1"' -i ./apps/backend/kustomization.yaml
 ```
 
 Commit and push changes:
 
 ```bash
 git add -A && \
-git commit -m "backend 5.0.1" && \
+git commit -m "backend 6.1.1" && \
 git push origin main
 ```
 
@@ -322,10 +322,10 @@ have an insider cookie. The frontend configuration can be found at `apps/fronten
 Trigger a deployment by updating the frontend container image:
 
 ```bash
-yq e '.images[0].newTag="5.0.1"' -i ./apps/frontend/kustomization.yaml
+yq e '.images[0].newTag="6.1.1"' -i ./apps/frontend/kustomization.yaml
 
 git add -A && \
-git commit -m "frontend 5.0.1" && \
+git commit -m "frontend 6.1.1" && \
 git push origin main
 
 flux reconcile source git flux-system
@@ -384,7 +384,8 @@ defines two metric checks:
 The Prometheus queries used for checking the error rate and latency are located at
 [flagger-metrics.yaml](https://github.com/stefanprodan/gitops-istio/blob/main/istio/gateway/flagger-metrics.yaml).
 
-During the canary analysis you can generate HTTP 500 errors and high latency to test Flagger's rollback.
+Bump the frontend version to `6.1.2`, then during the canary analysis you can generate
+HTTP 500 errors and high latency to test Flagger's rollback.
 
 Generate HTTP 500 errors:
 

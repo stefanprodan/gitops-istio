@@ -45,7 +45,7 @@ jobs:
           flux tree ks flux-system
       - name: Test canary release
         run: |
-          kubectl -n prod set image deployment/backend backend=stefanprodan/podinfo:5.0.1
+          kubectl -n prod set image deployment/backend backend=ghcr.io/stefanprodan/podinfo:6.1.1
           echo '>>> Waiting for canary finalization'
           retries=25
           count=0
