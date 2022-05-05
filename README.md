@@ -1,6 +1,7 @@
 # gitops-istio
 
 [![e2e](https://github.com/stefanprodan/gitops-istio/workflows/e2e/badge.svg)](https://github.com/stefanprodan/gitops-istio/actions)
+[![e2analyzee](https://github.com/stefanprodan/gitops-istio/workflows/analyze/badge.svg)](https://github.com/stefanprodan/gitops-istio/actions)
 [![license](https://img.shields.io/github/license/stefanprodan/gitops-istio.svg)](https://github.com/stefanprodan/gitops-istio/blob/main/LICENSE)
 
 This is a guide where you will get hands-on experience with GitOps and
@@ -153,6 +154,22 @@ spec:
 
 After modifying the Helm release values, you can push the change to git and Flux
 will reconfigure the Istio control plane according to your changes.
+
+You can monitor the Helm upgrades with:
+
+```bash
+flux -n istio-system get helmreleases --watch
+```
+
+To troubleshoot upgrade failures, you can inspect the Helm release with:
+
+```bash
+kubectl -n istio-system describe helmrelease istio-gateway
+```
+
+Flux issues Kubernetes events containing all the errors encountered during reconciliation.
+You could also configure Flux to publish the events to Slack, MS Team, Discord and others;
+please the [notification guide](https://fluxcd.io/docs/guides/notifications/) for more details.
 
 ## Istio control plane upgrades
 
