@@ -6,6 +6,9 @@ on:
     branches: [ '*' ]
     tags-ignore: [ '*' ]
 
+permissions:
+  contents: read
+
 jobs:
   kubernetes:
     runs-on: ubuntu-latest
@@ -42,7 +45,7 @@ jobs:
           kubectl -n prod rollout status deployment/backend --timeout=1m
       - name: List Flux managed objects
         run: |
-          flux tree ks flux-system
+          flux get all --all-namespaces
       - name: Test canary release
         run: |
           kubectl -n prod set image deployment/backend backend=ghcr.io/stefanprodan/podinfo:6.1.1

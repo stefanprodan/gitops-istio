@@ -2,8 +2,13 @@ name: analyze-istio
 
 on:
   workflow_dispatch:
-  pull_request:
   push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
 
 jobs:
   check-istio:
