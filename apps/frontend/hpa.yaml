@@ -1,4 +1,4 @@
-apiVersion: autoscaling/v2beta1
+apiVersion: autoscaling/v2beta2
 kind: HorizontalPodAutoscaler
 metadata:
   name: frontend
@@ -8,12 +8,12 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: frontend
-  minReplicas: 2
+  minReplicas: 1
   maxReplicas: 4
   metrics:
-  - type: Resource
-    resource:
-      name: cpu
-      # scale up if usage is above
-      # 99% of the requested CPU (100m)
-      targetAverageUtilization: 99
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 99

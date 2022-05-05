@@ -1,0 +1,7 @@
+# Flux ignore
+# https://fluxcd.io/docs/components/source/gitrepositories/#excluding-files
+
+# Exclude dirs and files which don't contain Kubernetes resources
+.github/
+docs/
+*.md

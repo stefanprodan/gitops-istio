@@ -1,6 +1,7 @@
 # gitops-istio
 
 [![e2e](https://github.com/stefanprodan/gitops-istio/workflows/e2e/badge.svg)](https://github.com/stefanprodan/gitops-istio/actions)
+[![e2analyzee](https://github.com/stefanprodan/gitops-istio/workflows/analyze/badge.svg)](https://github.com/stefanprodan/gitops-istio/actions)
 [![license](https://img.shields.io/github/license/stefanprodan/gitops-istio.svg)](https://github.com/stefanprodan/gitops-istio/blob/main/LICENSE)
 
 This is a guide where you will get hands-on experience with GitOps and
@@ -14,7 +15,8 @@ GitOps is a way to do Continuous Delivery, it works by using Git as a source of 
 for declarative infrastructure and workloads.
 For Kubernetes this means using `git push` instead of `kubectl apply/delete` or `helm install/upgrade`.
 
-In this workshop you'll be using GitHub to host the config repository and [Flux](https://fluxcd.io) as the GitOps delivery solution.
+In this workshop you'll be using GitHub to host the config repository and [Flux](https://fluxcd.io)
+as the GitOps delivery solution.
 
 ### What is Progressive Delivery?
 
@@ -22,34 +24,26 @@ Progressive delivery is an umbrella term for advanced deployment patterns like c
 Progressive delivery techniques are used to reduce the risk of introducing a new software version in production
 by giving app developers and SRE teams a fine-grained control over the blast radius.
 
-In this workshop you'll be using [Flagger](https://flagger.app) and Prometheus to automate Canary Releases and A/B Testing for your applications.
+In this workshop you'll be using [Flagger](https://flagger.app), Istio and Prometheus to automate
+Canary Releases and A/B Testing for your applications.
 
-![Progressive Delivery GitOps Pipeline](https://raw.githubusercontent.com/fluxcd/flagger/main/docs/diagrams/flagger-gitops-istio.png)
+![Progressive Delivery GitOps Pipeline](/docs/images/flux-flagger-gitops.png)
 
 ## Prerequisites
 
-You'll need a Kubernetes cluster **v1.16** or newer with `LoadBalancer` support. 
+You'll need a Kubernetes cluster **v1.20** or newer with `LoadBalancer` support. 
 For testing purposes you can use Minikube with 2 CPUs and 4GB of memory. 
 
-Install the `flux` CLI with Homebrew:
+Install `jq`, `yq` and the `flux` CLI with Homebrew:
 
 ```bash
-brew install fluxcd/tap/flux
+brew install jq yq fluxcd/tap/flux
 ```
-
-Binaries for macOS AMD64/ARM64, Linux AMD64/ARM and Windows are available
-to download on the [flux2 release page](https://github.com/fluxcd/flux2/releases).
 
 Verify that your cluster satisfies the prerequisites with:
 
 ```bash
 flux check --pre
-```
-
-Install `jq` and `yq` with Homebrew:
-
-```bash
-brew install jq yq
 ```
 
 Fork this repository and clone it:
@@ -86,7 +80,7 @@ check _Allow write access_, paste the Flux public key and click _Add key_.
 
 When Flux has access to your repository it will do the following:
 
-* installs the Istio operator
+* installs Istio using the Istio `base`, `istiod` and `gateway` Helm charts
 * waits for Istio control plane to be ready
 * installs Flagger, Prometheus and Grafana
 * creates the Istio public gateway
@@ -95,15 +89,16 @@ When Flux has access to your repository it will do the following:
 * creates the frontend deployment and canary
 * creates the backend deployment and canary
 
-When bootstrapping a cluster with Istio, it is important to define the apply order. For the applications
-pods to be injected with Istio sidecar, the Istio control plane must be up and running before the apps.
+When bootstrapping a cluster with Istio, it is important to control the installation order.
+For the applications pods to be injected with Istio sidecar,
+the Istio control plane must be up and running before the apps.
 
 With Flux v2 you can specify the execution order by defining dependencies between objects.
 For example, in [clusters/my-cluster/apps.yaml](https://github.com/stefanprodan/gitops-istio/blob/main/clusters/my-cluster/apps.yaml)
 we tell Flux that the `apps` reconciliation depends on the `istio-system` one:
 
 ```yaml
-apiVersion: kustomize.toolkit.fluxcd.io/v1beta1
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
 kind: Kustomization
 metadata:
   name: apps
@@ -130,37 +125,64 @@ You can tail the Flux reconciliation logs with:
 flux logs --all-namespaces --follow --tail=10
 ```
 
-## Istio customizations and upgrades
+List all the Kubernetes resources managed by Flux with:
 
-![Flux Istio Operator](https://raw.githubusercontent.com/fluxcd/helm-operator-get-started/master/diagrams/flux-istio-operator.png)
-
-You can customize the Istio installation with the `IstioOperator` resource located at
-[istio/system/profile.yaml](https://github.com/stefanprodan/gitops-istio/blob/main/istio/system/profile.yaml):
-
-```yaml
-apiVersion: install.istio.io/v1alpha1
-kind: IstioOperator
-metadata:
-  name: istio-default
-  namespace: istio-system
-spec:
-  profile: demo
-  components:
-    pilot:
-      k8s:
-        resources:
-          requests:
-            cpu: 10m
-            memory: 100Mi
+```bash
+flux tree kustomization flux-system
 ```
 
-After modifying the Istio settings, you can push the change to git and Flux will apply it on the cluster. 
-The Istio operator will reconfigure the Istio control plane according to your changes.
+## Istio customizations
 
-When a new Istio version is available, the [`update-istio` GitHub Action workflow](https://github.com/stefanprodan/gitops-istio/blob/main/.github/workflows/update-istio.yaml)
-will open a pull request with the manifest updates needed for upgrading Istio Operator.
-The new Istio version is tested on Kubernetes Kind by the [`e2e` workflow](https://github.com/stefanprodan/gitops-istio/blob/main/.github/workflows/e2e.yaml)
-and when the PR is merged into the main branch, Flux will upgrade Istio in-cluster.
+You can customize the Istio installation using the Flux `HelmReleases` located at
+[istio/system/istio.yaml](https://github.com/stefanprodan/gitops-istio/blob/main/istio/system/istio.yaml):
+
+```yaml
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: istio-gateway
+  namespace: istio-system
+spec:
+  dependsOn:
+    - name: istio-base
+    - name: istiod
+  # source: https://github.com/istio/istio/blob/master/manifests/charts/gateway/values.yaml
+  values:
+    autoscaling:
+      enabled: true
+```
+
+After modifying the Helm release values, you can push the change to git and Flux
+will reconfigure the Istio control plane according to your changes.
+
+You can monitor the Helm upgrades with:
+
+```bash
+flux -n istio-system get helmreleases --watch
+```
+
+To troubleshoot upgrade failures, you can inspect the Helm release with:
+
+```bash
+kubectl -n istio-system describe helmrelease istio-gateway
+```
+
+Flux issues Kubernetes events containing all the errors encountered during reconciliation.
+You could also configure Flux to publish the events to Slack, MS Team, Discord and others;
+please the [notification guide](https://fluxcd.io/docs/guides/notifications/) for more details.
+
+## Istio control plane upgrades
+
+Istio upgrades are automated using GitHub Actions and Flux.
+
+![Flux Istio Operator](docs/images/flux-istio-gitops.png)
+
+When a new Istio version is available, the
+[`update-istio` GitHub Action workflow](https://github.com/stefanprodan/gitops-istio/blob/main/.github/workflows/update-istio.yaml)
+will open a pull request with the manifest updates needed for upgrading Istio.
+The new Istio version is tested on Kubernetes Kind by the
+[`e2e` workflow](https://github.com/stefanprodan/gitops-istio/blob/main/.github/workflows/e2e.yaml)
+and when the PR is merged into the main branch, Flux will upgrade Istio on the production cluster.
 
 ## Application bootstrap
 
@@ -232,14 +254,14 @@ git pull origin main
 To trigger a canary deployment for the backend app, bump the container image:
 
 ```bash
-yq e '.images[0].newTag="5.0.1"' -i ./apps/backend/kustomization.yaml
+yq e '.images[0].newTag="6.1.1"' -i ./apps/backend/kustomization.yaml
 ```
 
 Commit and push changes:
 
 ```bash
 git add -A && \
-git commit -m "backend 5.0.1" && \
+git commit -m "backend 6.1.1" && \
 git push origin main
 ```
 
@@ -317,10 +339,10 @@ have an insider cookie. The frontend configuration can be found at `apps/fronten
 Trigger a deployment by updating the frontend container image:
 
 ```bash
-yq e '.images[0].newTag="5.0.1"' -i ./apps/frontend/kustomization.yaml
+yq e '.images[0].newTag="6.1.1"' -i ./apps/frontend/kustomization.yaml
 
 git add -A && \
-git commit -m "frontend 5.0.1" && \
+git commit -m "frontend 6.1.1" && \
 git push origin main
 
 flux reconcile source git flux-system
@@ -379,7 +401,8 @@ defines two metric checks:
 The Prometheus queries used for checking the error rate and latency are located at
 [flagger-metrics.yaml](https://github.com/stefanprodan/gitops-istio/blob/main/istio/gateway/flagger-metrics.yaml).
 
-During the canary analysis you can generate HTTP 500 errors and high latency to test Flagger's rollback.
+Bump the frontend version to `6.1.2`, then during the canary analysis you can generate
+HTTP 500 errors and high latency to test Flagger's rollback.
 
 Generate HTTP 500 errors:
 

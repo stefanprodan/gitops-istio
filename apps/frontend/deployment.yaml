@@ -8,7 +8,7 @@ metadata:
 spec:
   minReadySeconds: 5
   revisionHistoryLimit: 5
-  progressDeadlineSeconds: 60
+  progressDeadlineSeconds: 120
   strategy:
     rollingUpdate:
       maxUnavailable: 0
@@ -63,5 +63,5 @@ spec:
             cpu: 2000m
             memory: 512Mi
           requests:
-            cpu: 100m
-            memory: 64Mi
+            cpu: 10m
+            memory: 16Mi

@@ -11,10 +11,10 @@ spec:
     name: frontend
   # the maximum time in seconds for the canary deployment
   # to make progress before it is rollback (default 600s)
-  progressDeadlineSeconds: 60
+  progressDeadlineSeconds: 120
   # HPA reference (optional)
   autoscalerRef:
-    apiVersion: autoscaling/v2beta1
+    apiVersion: autoscaling/v2beta2
     kind: HorizontalPodAutoscaler
     name: frontend
   service:
@@ -22,10 +22,10 @@ spec:
     port: 9898
     # Istio gateways (optional)
     gateways:
-    - istio-system/public-gateway
+      - istio-system/public-gateway
     # Istio virtual service host names (optional)
     hosts:
-    - "*"
+      - "*"
   analysis:
     # schedule interval (default 60s)
     interval: 15s
@@ -72,4 +72,4 @@ spec:
         timeout: 15s
         url: http://flagger-loadtester.prod/
         metadata:
-          cmd: "hey -z 1m -q 10 -c 2 -H 'Cookie: type=insider' http://frontend.prod:9898/"
+          cmd: "hey -z 1m -q 10 -c 2 -H 'Cookie: type=insider' http://istio-gateway.istio-system/"

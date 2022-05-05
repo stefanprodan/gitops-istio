@@ -1,0 +1,94 @@
+apiVersion: source.toolkit.fluxcd.io/v1beta1
+kind: HelmRepository
+metadata:
+  name: istio
+  namespace: istio-system
+  labels:
+    app.kubernetes.io/part-of: istio
+spec:
+  interval: 1h0m0s
+  url: https://istio-release.storage.googleapis.com/charts
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: istio-base
+  namespace: istio-system
+  labels:
+    app.kubernetes.io/part-of: istio
+spec:
+  releaseName: istio-base
+  install:
+    crds: Create
+  upgrade:
+    crds: CreateReplace
+  chart:
+    spec:
+      version: "${version}"
+      chart: base
+      sourceRef:
+        kind: HelmRepository
+        name: istio
+  interval: 1h0m0s
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: istiod
+  namespace: istio-system
+  labels:
+    app.kubernetes.io/part-of: istio
+spec:
+  releaseName: istiod
+  dependsOn:
+    - name: istio-base
+  chart:
+    spec:
+      version: "${version}"
+      chart: istiod
+      sourceRef:
+        kind: HelmRepository
+        name: istio
+  interval: 1h0m0s
+  values:
+    pilot:
+      autoscaleEnabled: false
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+    proxy:
+      resources:
+        requests:
+          cpu: 10m
+          memory: 16Mi
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: istio-gateway
+  namespace: istio-system
+  labels:
+    app.kubernetes.io/part-of: istio
+spec:
+  releaseName: istio-gateway
+  dependsOn:
+    - name: istio-base
+    - name: istiod
+  chart:
+    spec:
+      version: "${version}"
+      chart: gateway
+      sourceRef:
+        kind: HelmRepository
+        name: istio
+  interval: 1h0m0s
+  values:
+    autoscaling:
+      enabled: false
+    resources:
+      requests:
+        cpu: 10m
+        memory: 128Mi
+    service:
+      type: "${service:=LoadBalancer}"

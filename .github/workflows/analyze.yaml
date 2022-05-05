@@ -1,0 +1,38 @@
+name: analyze
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  istio:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Get Istio current version
+        id: get-istio-version
+        run: |
+          ISTIO_VERSION=$(yq eval '.data.version' ./clusters/my-cluster/istio-version.yaml)
+          echo "ISTIO_VERSION=$ISTIO_VERSION" >> $GITHUB_ENV
+      - name: Get Istio CTL URL
+        id: get-istioctl
+        uses: istio/get-istioctl@e9b2b82bc1cecf150ec6aee77ceee8c256f4faf4
+        with:
+          version: ${{ env.ISTIO_VERSION }}
+      - name: Download Istio CTL
+        run: |
+          curl -o istioctl.tar.gz -fsLO ${{ steps.get-istioctl.outputs.istioctl-url }}
+          tar -xzf istioctl.tar.gz
+          ./istioctl version --remote=false
+      - name: Analyze manifests
+        run: |
+          ./istioctl analyze -A --use-kube=false \
+            --failure-threshold ERROR \
+            $(find . -not -path "*/.git*/*" -not -path "*/clusters/*" -name "*.yaml" -type f)

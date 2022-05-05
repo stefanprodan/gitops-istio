@@ -6,6 +6,9 @@ on:
     branches: [ '*' ]
     tags-ignore: [ '*' ]
 
+permissions:
+  contents: read
+
 jobs:
   kubernetes:
     runs-on: ubuntu-latest
@@ -20,6 +23,9 @@ jobs:
           version: v0.11.1
       - name: Install Flux in Kubernetes Kind
         run: flux install
+      - name: Set Istio Gateway service type
+        run: |
+          kubectl -n flux-system create cm istio-version --from-literal=service=NodePort
       - name: Setup cluster reconciliation
         run: |
           flux create source git flux-system \
@@ -30,16 +36,19 @@ jobs:
           --path=./clusters/my-cluster
       - name: Verify cluster reconciliation
         run: |
-          kubectl -n flux-system wait kustomization/istio-operator --for=condition=ready --timeout=2m
           kubectl -n flux-system wait kustomization/istio-system --for=condition=ready --timeout=2m
+          kubectl -n flux-system wait kustomization/istio-gateway --for=condition=ready --timeout=2m
           kubectl -n flux-system wait kustomization/apps --for=condition=ready --timeout=2m
           kubectl -n prod wait canary/frontend --for=condition=promoted --timeout=1m
           kubectl -n prod rollout status deployment/frontend --timeout=1m
           kubectl -n prod wait canary/backend --for=condition=promoted --timeout=1m
           kubectl -n prod rollout status deployment/backend --timeout=1m
+      - name: List Flux managed objects
+        run: |
+          flux get all --all-namespaces
       - name: Test canary release
         run: |
-          kubectl -n prod set image deployment/backend backend=stefanprodan/podinfo:5.0.1
+          kubectl -n prod set image deployment/backend backend=ghcr.io/stefanprodan/podinfo:6.1.1
           echo '>>> Waiting for canary finalization'
           retries=25
           count=0

@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: istio-version
+  namespace: flux-system
+  annotations:
+    kustomize.toolkit.fluxcd.io/ssa: merge
+data:
+  version: 1.13.2
