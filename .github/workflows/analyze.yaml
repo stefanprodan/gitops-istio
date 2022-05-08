@@ -26,13 +26,8 @@ jobs:
         uses: istio/get-istioctl@e9b2b82bc1cecf150ec6aee77ceee8c256f4faf4
         with:
           version: ${{ env.ISTIO_VERSION }}
-      - name: Download Istio CTL
-        run: |
-          curl -o istioctl.tar.gz -fsLO ${{ steps.get-istioctl.outputs.istioctl-url }}
-          tar -xzf istioctl.tar.gz
-          ./istioctl version --remote=false
       - name: Analyze manifests
         run: |
-          ./istioctl analyze -A --use-kube=false \
+          istioctl analyze -A --use-kube=false \
             --failure-threshold ERROR \
             $(find . -not -path "*/.git*/*" -not -path "*/clusters/*" -name "*.yaml" -type f)
