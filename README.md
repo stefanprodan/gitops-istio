@@ -32,7 +32,16 @@ Canary Releases and A/B Testing for your applications.
 ## Prerequisites
 
 You'll need a Kubernetes cluster **v1.20** or newer with `LoadBalancer` support. 
-For testing purposes you can use Minikube with 2 CPUs and 4GB of memory. 
+
+For testing purposes you can use Minikube with 2 CPUs and 4GB of memory:
+```bash
+minikube start --cpus='2' --memory='4g'
+```
+If using Minikube, run the following in a separate terminal window/tab for the duration of this workshop:
+```bash
+minikube tunnel
+```
+This assigns an External-IP to the istio-gateway service and allows the helm install to complete successfully.
 
 Install `jq`, `yq` and the `flux` CLI with Homebrew:
 
