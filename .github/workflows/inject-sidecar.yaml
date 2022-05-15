@@ -18,7 +18,7 @@ jobs:
       - name: get istio controlplane version
         id: get-istio-version
         run: |
-          ISTIO_VERSION=$(yq eval '. | select(.kind == "Deployment") | .spec.template.spec.containers[0].image | split(":") | .[1]' ./istio/operator/manifests.yaml)
+          ISTIO_VERSION=$(yq eval '.data.version' ./clusters/my-cluster/istio-version.yaml)
           echo "ISTIO_VERSION=$ISTIO_VERSION" >> $GITHUB_ENV
       - name: get istioctl uri
         id: get-istioctl
