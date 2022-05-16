@@ -23,7 +23,7 @@ jobs:
           echo "ISTIO_VERSION=$ISTIO_VERSION" >> $GITHUB_ENV
       - name: Get Istio CTL URL
         id: get-istioctl
-        uses: istio/get-istioctl@e9b2b82bc1cecf150ec6aee77ceee8c256f4faf4
+        uses: istio/get-istioctl@v0.3
         with:
           version: ${{ env.ISTIO_VERSION }}
       - name: Analyze manifests
