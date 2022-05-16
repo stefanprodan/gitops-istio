@@ -30,4 +30,5 @@ jobs:
         run: |
           istioctl analyze -A --use-kube=false \
             --failure-threshold ERROR \
-            $(find . -not -path "*/.git*/*" -not -path "*/clusters/*" -name "*.yaml" -type f)
+            $(find . -not -path "*/.git*/*" -not -path "*/clusters/*" \
+              -not -name "*.patch.yaml" -not -name "kustomization.yaml" -name "*.yaml" -type f)
