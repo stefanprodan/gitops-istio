@@ -79,7 +79,8 @@ jobs:
                  -not -path "*/istio/operator/manifests.yaml" -name "*deployment.yaml" \
                  -print0 | xargs -0 -I{} bash -c "inject {}"
 
-          rm manifests.yaml injector.yaml values.yaml mesh.yaml
+          rm inj-values.yaml injector.yaml values.yaml mesh.yaml
+          
           if [[ $(git diff --stat) != '' ]]; then
             echo ::set-output name=version::${ISTIO_VERSION}
           fi
