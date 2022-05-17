@@ -43,9 +43,9 @@ jobs:
           cat istio/system/istio.yaml | yq e '. | select(.kind == "HelmRelease" and .metadata.name =="istiod") | .spec.values' - > values.yaml
           VERSION=$(cat clusters/my-cluster/istio-version.yaml | yq e '.data.version' -)
           helm repo add istio $URI
-          helm template -f values.yaml --version $VERSION istiod istio/istiod | yq e '.| select(.kind == "ConfigMap" and .metadata.name == "istio-sidecar-injector") | .data.config' - > injector.yaml
-          helm template -f values.yaml --version $VERSION istiod istio/istiod | yq e '.| select(.kind == "ConfigMap" and .metadata.name == "istio") | .data.mesh' - > mesh.yaml
-          helm template -f values.yaml --version $VERSION istiod istio/istiod | yq e '.| select(.kind == "ConfigMap" and .metadata.name == "istio-sidecar-injector") | .data.values' - > inj-values.yaml
+          helm template -n istio-system -f values.yaml --version $VERSION istiod istio/istiod | yq e '.| select(.kind == "ConfigMap" and .metadata.name == "istio-sidecar-injector") | .data.config' - > injector.yaml
+          helm template -n istio-system -f values.yaml --version $VERSION istiod istio/istiod | yq e '.| select(.kind == "ConfigMap" and .metadata.name == "istio") | .data.mesh' - > mesh.yaml
+          helm template -n istio-system -f values.yaml --version $VERSION istiod istio/istiod | yq e '.| select(.kind == "ConfigMap" and .metadata.name == "istio-sidecar-injector") | .data.values' - > inj-values.yaml
 
           python -m pip install jsonpatch
 

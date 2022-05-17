@@ -51,6 +51,8 @@ spec:
         name: istio
   interval: 1h0m0s
   values:
+    global:
+      istioNamespace: istio-system
     pilot:
       autoscaleEnabled: false
       resources:

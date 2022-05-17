@@ -74,3 +74,5 @@ jobs:
           kubectl -n istio-operator get all
           kubectl -n istio-system get all
           kubectl -n prod get all
+          kubectl -n prod describe deployment backend
+          kubectl -n prod logs -l app=backend --all-containers=true
