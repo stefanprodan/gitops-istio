@@ -53,17 +53,17 @@ spec:
   values:
     global:
       istioNamespace: istio-system
+      proxy:
+        resources:
+          requests:
+            cpu: 10m
+            memory: 16Mi
     pilot:
       autoscaleEnabled: false
       resources:
         requests:
           cpu: 100m
           memory: 128Mi
-    proxy:
-      resources:
-        requests:
-          cpu: 10m
-          memory: 16Mi
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
