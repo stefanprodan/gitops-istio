@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- service.yaml
+- deployment.yaml
+patchesJson6902:
+- path: deployment.patch.yaml
+  target:
+    group: apps
+    kind: Deployment
+    name: flagger-loadtester
+    version: v1
