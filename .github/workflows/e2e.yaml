@@ -28,9 +28,23 @@ jobs:
           kubectl -n flux-system create cm istio-version --from-literal=service=NodePort
       - name: Setup cluster reconciliation
         run: |
-          flux create source git flux-system \
-          --url=${{ github.event.repository.html_url }} \
-          --branch=${GITHUB_REF#refs/heads/}
+          kubectl apply -f - <<EOF > cat
+          apiVersion: source.toolkit.fluxcd.io/v1beta2
+          kind: GitRepository
+          metadata:
+            name: flux-system
+            namespace: flux-system
+          spec:
+            interval: 15m
+            ref:
+              branch: ${GITHUB_REF#refs/heads/}
+            url: ${{ github.event.repository.html_url }}
+            ignore: |
+              /clusters/my-cluster/flux-system/
+          EOF
+          
+          kubectl -n flux-system wait gitrepository/flux-system --for=condition=ready --timeout=1m
+          
           flux create kustomization flux-system \
           --source=flux-system \
           --path=./clusters/my-cluster
