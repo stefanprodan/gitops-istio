@@ -6,4 +6,5 @@ metadata:
   annotations:
     kustomize.toolkit.fluxcd.io/ssa: merge
 data:
-  version: 1.13.3
+  version: 1.16.0
+  # version: 1.13.3
