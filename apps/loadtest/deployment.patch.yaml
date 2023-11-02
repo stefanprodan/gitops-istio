@@ -2,9 +2,6 @@
   path: /metadata/creationTimestamp
   value: null
 - op: add
-  path: /spec/strategy
-  value: {}
-- op: add
   path: /spec/template/metadata/annotations/kubectl.kubernetes.io~1default-container
   value: loadtester
 - op: add
@@ -27,13 +24,13 @@
   value: istio
 - op: add
   path: /spec/template/metadata/labels/service.istio.io~1canonical-name
-  value: flagger-loadtester
+  value: loadtester
 - op: add
   path: /spec/template/metadata/labels/service.istio.io~1canonical-revision
   value: latest
 - op: replace
   path: /spec/template/spec/containers/0/resources/limits/cpu
-  value: "1"
+  value: "2"
 - op: add
   path: /spec/template/spec/containers/1
   value:
@@ -45,8 +42,6 @@
       - --proxyLogLevel=warning
       - --proxyComponentLogLevel=misc:error
       - --log_output_level=default:info
-      - --concurrency
-      - "2"
     env:
       - name: JWT_POLICY
         value: third-party-jwt
@@ -74,24 +69,34 @@
         valueFrom:
           fieldRef:
             fieldPath: status.hostIP
+      - name: ISTIO_CPU_LIMIT
+        valueFrom:
+          resourceFieldRef:
+            divisor: '0'
+            resource: limits.cpu
       - name: PROXY_CONFIG
         value: |
           {}
       - name: ISTIO_META_POD_PORTS
         value: |-
           [
-              {"name":"http","containerPort":8080}
+              {"name":"http","containerPort":9898,"protocol":"TCP"}
           ]
       - name: ISTIO_META_APP_CONTAINERS
         value: loadtester
       - name: ISTIO_META_CLUSTER_ID
         value: Kubernetes
+      - name: ISTIO_META_NODE_NAME
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: spec.nodeName
       - name: ISTIO_META_INTERCEPTION_MODE
         value: REDIRECT
       - name: ISTIO_META_WORKLOAD_NAME
-        value: flagger-loadtester
+        value: loadtester
       - name: ISTIO_META_OWNER
-        value: kubernetes://apis/apps/v1/namespaces/prod/deployments/flagger-loadtester
+        value: kubernetes://apis/apps/v1/namespaces/prod/deployments/loadtester
       - name: ISTIO_META_MESH_ID
         value: cluster.local
       - name: TRUST_DOMAIN
@@ -130,6 +135,12 @@
       runAsNonRoot: true
       runAsUser: 1337
     volumeMounts:
+      - mountPath: /var/run/secrets/workload-spiffe-uds
+        name: workload-socket
+      - mountPath: /var/run/secrets/credential-uds
+        name: credential-socket
+      - mountPath: /var/run/secrets/workload-spiffe-credentials
+        name: workload-certs
       - mountPath: /var/run/secrets/istio
         name: istiod-ca-cert
       - mountPath: /var/lib/istio/data
@@ -161,6 +172,7 @@
         - '*'
         - -d
         - 15090,15021,15020
+        - --log_output_level=default:info
       image: docker.io/istio/proxyv2:1.18.5
       name: istio-init
       resources:
@@ -184,12 +196,14 @@
         runAsNonRoot: false
         runAsUser: 0
 - op: add
-  path: /spec/template/spec/securityContext
-  value:
-    fsGroup: 1337
-- op: add
   path: /spec/template/spec/volumes
   value:
+    - emptyDir: {}
+      name: workload-socket
+    - emptyDir: {}
+      name: credential-socket
+    - emptyDir: {}
+      name: workload-certs
     - emptyDir:
         medium: Memory
       name: istio-envoy
