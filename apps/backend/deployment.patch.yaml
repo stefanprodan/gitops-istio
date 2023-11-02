@@ -42,8 +42,6 @@
       - --proxyLogLevel=warning
       - --proxyComponentLogLevel=misc:error
       - --log_output_level=default:info
-      - --concurrency
-      - "2"
     env:
       - name: JWT_POLICY
         value: third-party-jwt
@@ -71,6 +69,11 @@
         valueFrom:
           fieldRef:
             fieldPath: status.hostIP
+      - name: ISTIO_CPU_LIMIT
+        valueFrom:
+          resourceFieldRef:
+            divisor: '0'
+            resource: limits.cpu
       - name: PROXY_CONFIG
         value: |
           {}
@@ -83,6 +86,11 @@
         value: backend
       - name: ISTIO_META_CLUSTER_ID
         value: Kubernetes
+      - name: ISTIO_META_NODE_NAME
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: spec.nodeName
       - name: ISTIO_META_INTERCEPTION_MODE
         value: REDIRECT
       - name: ISTIO_META_WORKLOAD_NAME
@@ -127,6 +135,12 @@
       runAsNonRoot: true
       runAsUser: 1337
     volumeMounts:
+      - mountPath: /var/run/secrets/workload-spiffe-uds
+        name: workload-socket
+      - mountPath: /var/run/secrets/credential-uds
+        name: credential-socket
+      - mountPath: /var/run/secrets/workload-spiffe-credentials
+        name: workload-certs
       - mountPath: /var/run/secrets/istio
         name: istiod-ca-cert
       - mountPath: /var/lib/istio/data
