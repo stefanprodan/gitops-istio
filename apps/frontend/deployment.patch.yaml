@@ -172,6 +172,7 @@
         - '*'
         - -d
         - 15090,15021,15020
+        - --log_output_level=default:info
       image: docker.io/istio/proxyv2:1.18.5
       name: istio-init
       resources:
@@ -195,12 +196,14 @@
         runAsNonRoot: false
         runAsUser: 0
 - op: add
-  path: /spec/template/spec/securityContext
-  value:
-    fsGroup: 1337
-- op: add
   path: /spec/template/spec/volumes
   value:
+    - emptyDir: {}
+      name: workload-socket
+    - emptyDir: {}
+      name: credential-socket
+    - emptyDir: {}
+      name: workload-certs
     - emptyDir:
         medium: Memory
       name: istio-envoy
