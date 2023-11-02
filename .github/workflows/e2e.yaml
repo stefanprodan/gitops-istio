@@ -21,6 +21,7 @@ jobs:
         uses: engineerd/setup-kind@v0.5.0
         with:
           version: v0.20.0
+          image: kindest/node:v1.25.11@sha256:227fa11ce74ea76a0474eeefb84cb75d8dad1b08638371ecf0e86259b35be0c8
       - name: Install Flux in Kubernetes Kind
         run: flux install
       - name: Set Istio Gateway service type
