@@ -2,6 +2,12 @@
   path: /metadata/creationTimestamp
   value: null
 - op: add
+  path: /spec/strategy
+  value: {}
+- op: add
+  path: /spec/template/metadata/annotations/istio.io~1rev
+  value: default
+- op: add
   path: /spec/template/metadata/annotations/kubectl.kubernetes.io~1default-container
   value: loadtester
 - op: add
@@ -15,7 +21,7 @@
   value: "15020"
 - op: add
   path: /spec/template/metadata/annotations/sidecar.istio.io~1status
-  value: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+  value: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-socket","credential-socket","workload-certs","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
 - op: add
   path: /spec/template/metadata/creationTimestamp
   value: null
@@ -24,13 +30,13 @@
   value: istio
 - op: add
   path: /spec/template/metadata/labels/service.istio.io~1canonical-name
-  value: loadtester
+  value: flagger-loadtester
 - op: add
   path: /spec/template/metadata/labels/service.istio.io~1canonical-revision
   value: latest
 - op: replace
   path: /spec/template/spec/containers/0/resources/limits/cpu
-  value: "2"
+  value: "1"
 - op: add
   path: /spec/template/spec/containers/1
   value:
@@ -72,7 +78,7 @@
       - name: ISTIO_CPU_LIMIT
         valueFrom:
           resourceFieldRef:
-            divisor: '0'
+            divisor: "0"
             resource: limits.cpu
       - name: PROXY_CONFIG
         value: |
@@ -80,30 +86,39 @@
       - name: ISTIO_META_POD_PORTS
         value: |-
           [
-              {"name":"http","containerPort":9898,"protocol":"TCP"}
+              {"name":"http","containerPort":8080}
           ]
       - name: ISTIO_META_APP_CONTAINERS
         value: loadtester
+      - name: GOMEMLIMIT
+        valueFrom:
+          resourceFieldRef:
+            divisor: "0"
+            resource: limits.memory
+      - name: GOMAXPROCS
+        valueFrom:
+          resourceFieldRef:
+            divisor: "0"
+            resource: limits.cpu
       - name: ISTIO_META_CLUSTER_ID
         value: Kubernetes
       - name: ISTIO_META_NODE_NAME
         valueFrom:
           fieldRef:
-            apiVersion: v1
             fieldPath: spec.nodeName
       - name: ISTIO_META_INTERCEPTION_MODE
         value: REDIRECT
       - name: ISTIO_META_WORKLOAD_NAME
-        value: loadtester
+        value: flagger-loadtester
       - name: ISTIO_META_OWNER
-        value: kubernetes://apis/apps/v1/namespaces/prod/deployments/loadtester
+        value: kubernetes://apis/apps/v1/namespaces/prod/deployments/flagger-loadtester
       - name: ISTIO_META_MESH_ID
         value: cluster.local
       - name: TRUST_DOMAIN
         value: cluster.local
       - name: ISTIO_PROMETHEUS_ANNOTATIONS
         value: '{"scrape":"true","path":"","port":""}'
-    image: docker.io/istio/proxyv2:1.18.5
+    image: docker.io/istio/proxyv2:1.19.3
     name: istio-proxy
     ports:
       - containerPort: 15090
@@ -173,7 +188,7 @@
         - -d
         - 15090,15021,15020
         - --log_output_level=default:info
-      image: docker.io/istio/proxyv2:1.18.5
+      image: docker.io/istio/proxyv2:1.19.3
       name: istio-init
       resources:
         limits:
@@ -198,12 +213,9 @@
 - op: add
   path: /spec/template/spec/volumes
   value:
-    - emptyDir: {}
-      name: workload-socket
-    - emptyDir: {}
-      name: credential-socket
-    - emptyDir: {}
-      name: workload-certs
+    - name: workload-socket
+    - name: credential-socket
+    - name: workload-certs
     - emptyDir:
         medium: Memory
       name: istio-envoy
