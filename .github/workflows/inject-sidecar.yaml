@@ -25,7 +25,7 @@ jobs:
         uses: istio/get-istioctl@v0.3
         with:
           version: ${{ env.ISTIO_VERSION }}
-      - uses: azure/setup-helm@v1
+      - uses: azure/setup-helm@v2.1
         id: install
       - name: Get Istioctl
         run: |
